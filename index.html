@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Aventura English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: a notebook-page game board. Home = a winding path of 5 level stops; each level opens topic cards; play = one big question card. */
+:root{
+  --paper:#f2f7ff; --grid:#d8e5fb; --card:#ffffff; --ink:#1c2848; --muted:#5a6788; --edge:#c9d6f0;
+  --sky:#2d7ff0; --sky-deep:#1b5fc0;
+  --leaf:#22a565; --leaf-deep:#17804c;
+  --sun:#ffbf1f; --sun-deep:#d99a00;
+  --grape:#8a55e8; --grape-deep:#6a38c4;
+  --tomato:#ff5846; --tomato-deep:#d63a2a;
+  --good-bg:#dcf7e8; --bad-bg:#ffe3df; --star:#ffb400; --star-off:#d5dcec;
+  --display:'Baloo 2', 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif;
+  --body:'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#121b33; --grid:#1b2748; --card:#1a2545; --ink:#eef3ff; --muted:#a8b4d4; --edge:#2e3c66;
+  --good-bg:#15402d; --bad-bg:#4a1f1b; --star-off:#34426b; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#121b33; --grid:#1b2748; --card:#1a2545; --ink:#eef3ff; --muted:#a8b4d4; --edge:#2e3c66;
+  --good-bg:#15402d; --bad-bg:#4a1f1b; --star-off:#34426b; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px, transparent 1px),linear-gradient(90deg,var(--grid) 1px, transparent 1px);
+  background-size:28px 28px;
+  color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.5;
+  padding-inline:16px; padding-block:0 48px; min-height:100%;
+}
+button{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
+.app{max-width:880px;margin:0 auto}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:10px;padding-block:12px;background:var(--paper);border-bottom:2px dashed var(--edge);margin-bottom:20px}
+.brand{font-family:var(--display);font-weight:800;font-size:1.25rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand b{color:var(--tomato)}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--edge);border-radius:999px;padding:4px 12px;font-weight:800;font-variant-numeric:tabular-nums}
+.pill .s{color:var(--star)}
+.iconbtn{background:var(--card);border:2px solid var(--edge);border-radius:12px;padding:6px 10px;cursor:pointer;font-weight:800}
+.iconbtn:focus-visible,.btn:focus-visible,.opt:focus-visible,.tile:focus-visible,.stop:focus-visible,.topic button:focus-visible,.fcard:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+
+/* chunky game buttons */
+.btn{--c:var(--sky);--d:var(--sky-deep);display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;padding:12px 20px;font-family:var(--display);font-weight:800;font-size:1.1rem;color:#fff;background:var(--c);box-shadow:0 5px 0 var(--d);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--d)}
+.btn.ghost{background:var(--card);color:var(--ink);box-shadow:0 5px 0 var(--edge);border:2px solid var(--edge)}
+.btn.sun{--c:var(--sun);--d:var(--sun-deep);color:#3a2a00}
+.btn.leaf{--c:var(--leaf);--d:var(--leaf-deep)}
+.btn.tomato{--c:var(--tomato);--d:var(--tomato-deep)}
+
+/* home */
+.hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:26px}
+.mascot{width:108px;height:108px;flex:none}
+.hero-text{flex:1;min-width:0}
+.hero h1{font-size:clamp(2.2rem,7vw,3.4rem);font-weight:800;letter-spacing:-.01em}
+.hero h1 span{color:var(--sky)}
+.bubble{display:inline-block;position:relative;background:var(--card);border:2px solid var(--edge);border-radius:18px;padding:8px 14px;font-weight:700;margin-top:8px;max-width:34rem}
+.map{position:relative;display:grid;gap:22px;padding-block:6px}
+.map::before{content:"";position:absolute;left:50%;top:20px;bottom:20px;border-left:4px dashed var(--edge);transform:translateX(-2px)}
+.stop{--c:var(--sky);--d:var(--sky-deep);position:relative;display:flex;gap:14px;align-items:center;width:min(100%,560px);text-align:left;background:var(--card);border:3px solid var(--c);border-radius:22px;padding:14px 16px;box-shadow:0 6px 0 var(--d);cursor:pointer}
+.stop:nth-child(odd){justify-self:start}.stop:nth-child(even){justify-self:end}
+.stop[disabled]{cursor:not-allowed;border-color:var(--edge);box-shadow:0 6px 0 var(--edge)}
+.stop[disabled] .num{background:var(--star-off)}
+.num{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;font-family:var(--display);font-weight:800;font-size:1.8rem}
+.stop-body{flex:1;min-width:0}
+.stop h3{font-size:1.35rem}
+.stop p{margin:0;color:var(--muted);font-weight:700;font-size:.95rem}
+.stars{color:var(--star);font-size:1.05rem;letter-spacing:2px;white-space:nowrap}
+.stars .off{color:var(--star-off)}
+.lock{font-size:.85rem;color:var(--muted);font-weight:800}
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;margin-top:34px;color:var(--muted);font-weight:700}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.switch input{width:20px;height:20px;accent-color:var(--grape)}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-weight:700}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+
+/* level */
+.lvl-head{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.lvl-head h2{font-size:2rem}
+.lvl-head p{margin:0;color:var(--muted);font-weight:700}
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.topic{background:var(--card);border:2px solid var(--edge);border-radius:20px;padding:16px;display:grid;gap:10px;align-content:start}
+.topic .ic{font-size:2.2rem;line-height:1}
+.topic h3{font-size:1.3rem}
+.topic .row{display:flex;gap:8px;flex-wrap:wrap}
+.topic .row .btn{padding:8px 14px;font-size:1rem;flex:1}
+
+/* learn */
+.tip{background:var(--card);border:2px dashed var(--c,var(--sky));border-radius:18px;padding:12px 16px;font-weight:700;margin-bottom:18px}
+.tip b{font-family:var(--display);color:var(--c,var(--sky))}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.fcard{background:var(--card);border:2px solid var(--edge);border-radius:18px;padding:12px;text-align:center;cursor:pointer;display:grid;gap:4px;justify-items:center}
+.fcard:hover{border-color:var(--c,var(--sky))}
+.fcard .v{font-size:2.4rem;line-height:1.2;min-height:2.9rem;display:grid;place-items:center}
+.fcard .en{font-family:var(--display);font-weight:800;font-size:1.3rem}
+.fcard .es{color:var(--muted);font-weight:700;font-size:.9rem}
+.sentences{display:grid;gap:10px;margin-bottom:22px}
+.sent{display:flex;gap:12px;align-items:center;background:var(--card);border:2px solid var(--edge);border-radius:16px;padding:10px 14px;cursor:pointer;text-align:left}
+.sent .t{flex:1;min-width:0}
+.sent .en{font-weight:800;font-size:1.08rem}
+.sent .es{color:var(--muted);font-weight:700;font-size:.92rem}
+.spk{flex:none;font-size:1.3rem}
+.swatch{width:46px;height:46px;border-radius:50%;border:3px solid var(--edge)}
+.swatch.big{width:96px;height:96px}
+
+/* play */
+.hud{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.bar{flex:1;height:16px;background:var(--card);border:2px solid var(--edge);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--leaf);border-radius:999px;transition:width .3s}
+.hearts{font-size:1.3rem;letter-spacing:2px;white-space:nowrap;color:var(--tomato)}
+.hearts .off{color:var(--star-off)}
+.qcard{background:var(--card);border:3px solid var(--edge);border-radius:26px;padding:22px 18px;text-align:center;margin-bottom:18px}
+.qhint{color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;margin-bottom:10px}
+.qvis{font-size:4.6rem;line-height:1.1;display:grid;place-items:center;min-height:5rem}
+.qbig{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,6vw,2.5rem);overflow-wrap:anywhere}
+.qbig .blank{display:inline-block;min-width:3.5em;border-bottom:4px solid var(--sun);color:var(--sun-deep)}
+.qsub{color:var(--muted);font-weight:700;margin-top:6px}
+.listen{font-size:3rem;width:110px;height:110px;border-radius:50%;border:0;background:var(--sun);box-shadow:0 6px 0 var(--sun-deep);cursor:pointer}
+.listen:active{transform:translateY(4px);box-shadow:0 2px 0 var(--sun-deep)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{background:var(--card);border:3px solid var(--edge);border-radius:18px;padding:14px 10px;font-family:var(--display);font-weight:700;font-size:1.25rem;cursor:pointer;box-shadow:0 5px 0 var(--edge);transition:transform .08s;overflow-wrap:anywhere}
+.opt:hover:not([disabled]){border-color:var(--sky)}
+.opt:active:not([disabled]){transform:translateY(3px);box-shadow:0 2px 0 var(--edge)}
+.opt.ok{background:var(--good-bg);border-color:var(--leaf);box-shadow:0 5px 0 var(--leaf)}
+.opt.no{background:var(--bad-bg);border-color:var(--tomato);box-shadow:0 5px 0 var(--tomato);animation:shake .35s}
+.opt[disabled]{cursor:default}
+.slot{min-height:64px;border-bottom:3px dashed var(--edge);display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;padding:8px;margin-bottom:14px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}
+.tile{background:var(--card);border:3px solid var(--grape);border-radius:14px;padding:6px 12px;font-family:var(--display);font-weight:700;font-size:1.15rem;cursor:pointer;box-shadow:0 4px 0 var(--grape-deep)}
+.tile.used{visibility:hidden}
+.center{text-align:center}
+.feedback{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-top:18px;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:3px solid var(--leaf);background:var(--good-bg)}
+.feedback.bad{border-color:var(--tomato);background:var(--bad-bg)}
+.feedback .msg{flex:1;min-width:0}
+.feedback .msg strong{font-family:var(--display);font-size:1.35rem;display:block}
+.feedback .msg span{font-weight:700}
+.hintbtn{margin-top:10px}
+
+/* result */
+.result{text-align:center;display:grid;gap:14px;justify-items:center;padding-top:10px}
+.result h2{font-size:2.4rem}
+.bigstars{font-size:3.4rem;letter-spacing:6px;color:var(--star)}
+.bigstars .off{color:var(--star-off)}
+.result .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:20;width:100%;height:100%}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+.pop{animation:pop .35s ease-out}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:640px){
+  .map::before{left:37px}
+  .stop:nth-child(n){justify-self:stretch;width:100%}
+  .opts{gap:10px}
+  .opt{font-size:1.1rem;padding:12px 8px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <button class="iconbtn" id="backBtn" hidden aria-label="Volver">← Volver</button>
+    <div class="brand">Aventura <b>English</b></div>
+    <span class="pill" title="Estrellas ganadas"><span class="s">★</span><span id="totalStars">0</span></span>
+    <button class="iconbtn" id="soundBtn" aria-pressed="true" title="Sonido y voz">🔊</button>
+  </header>
+
+  <!-- HOME -->
+  <section id="scr-home">
+    <div class="hero">
+      <svg class="mascot" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="55" r="38" fill="var(--sun)"/>
+        <path d="M24 22 L50 11 L76 22 L50 33 Z" fill="var(--ink)"/>
+        <path d="M70 24 L72 40" stroke="var(--tomato)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="42" r="3.5" fill="var(--tomato)"/>
+        <circle cx="38" cy="52" r="5.5" fill="var(--ink)"/><circle cx="62" cy="52" r="5.5" fill="var(--ink)"/>
+        <circle cx="40" cy="50" r="1.8" fill="#fff"/><circle cx="64" cy="50" r="1.8" fill="#fff"/>
+        <circle cx="29" cy="64" r="5" fill="var(--tomato)" opacity=".35"/><circle cx="71" cy="64" r="5" fill="var(--tomato)" opacity=".35"/>
+        <path class="mouth" d="M40 66 Q50 76 60 66" stroke="var(--ink)" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="hero-text">
+        <h1>Aventura <span>English</span></h1>
+        <div class="bubble" id="homeBubble">Hi! Soy Pipo. Elegí un nivel, aprendé las palabras y ganá estrellas.</div>
+      </div>
+    </div>
+    <div class="map" id="map"></div>
+    <div class="tools">
+      <label class="switch"><input type="checkbox" id="teacher"> Modo profe: todos los niveles abiertos</label>
+      <span id="resetWrap"><button class="linkbtn" id="resetBtn">Borrar progreso</button></span>
+    </div>
+  </section>
+
+  <!-- LEVEL -->
+  <section id="scr-level" hidden>
+    <div class="lvl-head"><div class="num" id="lvlNum">1</div><div><h2 id="lvlName"></h2><p id="lvlSub"></p></div></div>
+    <div class="topics" id="topics"></div>
+  </section>
+
+  <!-- LEARN -->
+  <section id="scr-learn" hidden>
+    <div class="lvl-head"><div class="num" id="learnIc" style="font-size:1.8rem"></div><div><h2 id="learnName"></h2><p>Tocá cada tarjeta para escucharla.</p></div></div>
+    <div id="learnTip"></div>
+    <div id="learnList"></div>
+    <div class="center"><button class="btn leaf" id="learnPlay">¡A jugar! ▶</button></div>
+  </section>
+
+  <!-- PLAY -->
+  <section id="scr-play" hidden>
+    <div class="hud">
+      <div class="bar"><i id="bar"></i></div>
+      <span class="hearts" id="hearts"></span>
+      <span class="pill"><span id="score">0</span> pts</span>
+    </div>
+    <div class="qcard" id="qcard"></div>
+    <div id="answers"></div>
+    <div class="feedback" id="feedback" hidden>
+      <div class="msg" id="fbMsg"></div>
+      <button class="btn" id="nextBtn">Seguir →</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="scr-result" hidden>
+    <div class="result">
+      <svg class="mascot" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="55" r="38" fill="var(--sun)"/>
+        <path d="M24 22 L50 11 L76 22 L50 33 Z" fill="var(--ink)"/>
+        <path d="M70 24 L72 40" stroke="var(--tomato)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="42" r="3.5" fill="var(--tomato)"/>
+        <circle cx="38" cy="52" r="5.5" fill="var(--ink)"/><circle cx="62" cy="52" r="5.5" fill="var(--ink)"/>
+        <circle cx="40" cy="50" r="1.8" fill="#fff"/><circle cx="64" cy="50" r="1.8" fill="#fff"/>
+        <circle cx="29" cy="64" r="5" fill="var(--tomato)" opacity=".35"/><circle cx="71" cy="64" r="5" fill="var(--tomato)" opacity=".35"/>
+        <path class="mouth" id="resMouth" d="M40 66 Q50 76 60 66" stroke="var(--ink)" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+      <h2 id="resTitle"></h2>
+      <div class="bigstars" id="resStars"></div>
+      <p id="resText" style="font-weight:700;margin:0"></p>
+      <div class="row">
+        <button class="btn sun" id="resRetry">Jugar otra vez</button>
+        <button class="btn ghost" id="resBack">Elegir otro tema</button>
+      </div>
+    </div>
+  </section>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+(function(){
+"use strict";
+/* ============ DATA ============ */
+const COLORS = ["sky","leaf","sun","grape","tomato"];
+const DAYS = [["Monday","lunes"],["Tuesday","martes"],["Wednesday","miércoles"],["Thursday","jueves"],["Friday","viernes"],["Saturday","sábado"],["Sunday","domingo"]];
+const MONTHS = [["January","enero"],["February","febrero"],["March","marzo"],["April","abril"],["May","mayo"],["June","junio"],["July","julio"],["August","agosto"],["September","septiembre"],["October","octubre"],["November","noviembre"],["December","diciembre"]];
+const SEASON_AR = ["summer","summer","autumn","autumn","autumn","winter","winter","winter","spring","spring","spring","summer"];
+const ph = a => a.map(([en,es])=>({en,es}));
+
+const LEVELS = [
+{ name:"Palabras", sub:"Días, meses, estaciones, cuerpo, colores y cosas", topics:[
+  {id:"days", name:"Días de la semana", ic:"📅", kind:"vocab", items:DAYS.map(([en,es])=>({en,es})),
+   extra(){ return DAYS.map((d,i)=>({key:"after"+i, type:"choice", hint:"¿Qué día viene después?", big:"What day comes after "+d[0]+"?", sub:"¿Qué día viene después del "+d[1]+"?", answer:DAYS[(i+1)%7][0], options:pick(DAYS[(i+1)%7][0], DAYS.map(x=>x[0])), say:"After "+d[0]+" comes "+DAYS[(i+1)%7][0]})); }},
+  {id:"months", name:"Meses del año", ic:"🗓️", kind:"vocab", items:MONTHS.map(([en,es])=>({en,es})),
+   extra(){ return MONTHS.map((m,i)=>({key:"afterm"+i, type:"choice", hint:"¿Qué mes viene después?", big:"What month comes after "+m[0]+"?", sub:"¿Qué mes viene después de "+m[1]+"?", answer:MONTHS[(i+1)%12][0], options:pick(MONTHS[(i+1)%12][0], MONTHS.map(x=>x[0])), say:"After "+m[0]+" comes "+MONTHS[(i+1)%12][0]})); }},
+  {id:"seasons", name:"Estaciones", ic:"🍂", kind:"vocab", items:[{en:"spring",es:"primavera",v:"🌸"},{en:"summer",es:"verano",v:"☀️"},{en:"autumn",es:"otoño",v:"🍂"},{en:"winter",es:"invierno",v:"⛄"}],
+   tip:"En Argentina las estaciones son al revés que en Estados Unidos o Inglaterra: ¡acá diciembre es <b>summer</b>!",
+   extra(){ const s=["spring","summer","autumn","winter"];
+     const q=MONTHS.map((m,i)=>({key:"ar"+i, type:"choice", hint:"Estaciones en Argentina", big:"In Argentina, "+m[0]+" is in…", sub:"En Argentina, "+m[1]+" es en…", answer:SEASON_AR[i], options:shuffle(s.slice()), say:"In Argentina, "+m[0]+" is in "+SEASON_AR[i]}));
+     [["It's hot. We go to the pool.","Hace calor. Vamos a la pileta.","summer"],["It's cold and it snows.","Hace frío y nieva.","winter"],["The flowers grow.","Crecen las flores.","spring"],["The leaves fall.","Se caen las hojas.","autumn"]]
+       .forEach((x,i)=>q.push({key:"clue"+i,type:"choice",hint:"¿Qué estación es?",big:x[0],sub:x[1],answer:x[2],options:shuffle(s.slice()),say:x[0]+" It's "+x[2]}));
+     return q; }},
+  {id:"body", name:"Partes del cuerpo", ic:"🖐️", kind:"vocab", items:[{en:"eyes",es:"ojos",v:"👀"},{en:"ears",es:"orejas",v:"👂"},{en:"nose",es:"nariz",v:"👃"},{en:"mouth",es:"boca",v:"👄"},{en:"hands",es:"manos",v:"✋"},{en:"feet",es:"pies",v:"🦶"},{en:"legs",es:"piernas",v:"🦵"},{en:"arms",es:"brazos",v:"💪"},{en:"teeth",es:"dientes",v:"🦷"},{en:"tongue",es:"lengua",v:"👅"}],
+   extra(){ const all=["eyes","ears","nose","mouth","hands","feet","legs","teeth"];
+     return [["I see with my…","Veo con mis…","eyes"],["I hear with my…","Escucho con mis…","ears"],["I smell with my…","Huelo con mi…","nose"],["I eat with my…","Como con mi…","mouth"],["I write with my…","Escribo con mis…","hands"],["I walk with my…","Camino con mis…","feet"],["I brush my…","Me cepillo los…","teeth"]]
+       .map((x,i)=>({key:"use"+i,type:"choice",hint:"Completá",big:x[0],sub:x[1],answer:x[2],options:pick(x[2],all),say:x[0].replace("…"," "+x[2])})); }},
+  {id:"colors", name:"Colores", ic:"🎨", kind:"vocab", items:[{en:"red",es:"rojo",c:"#e53935"},{en:"blue",es:"azul",c:"#1e6fe0"},{en:"yellow",es:"amarillo",c:"#fdd835"},{en:"green",es:"verde",c:"#2e9e4f"},{en:"orange",es:"naranja",c:"#fb8c00"},{en:"purple",es:"violeta",c:"#7e3fbf"},{en:"pink",es:"rosa",c:"#f06292"},{en:"black",es:"negro",c:"#1a1a1a"},{en:"white",es:"blanco",c:"#ffffff"},{en:"brown",es:"marrón",c:"#7b4a26"},{en:"gray",es:"gris",c:"#9e9e9e"}],
+   extra(){ const all=["red","blue","yellow","green","orange","purple","pink","white","gray"];
+     const q=[["red","yellow","orange"],["blue","yellow","green"],["red","blue","purple"],["red","white","pink"],["black","white","gray"]].map((m,i)=>({key:"mix"+i,type:"choice",hint:"Mezclá los colores",big:m[0]+" + "+m[1]+" = ?",answer:m[2],options:pick(m[2],all),say:m[0]+" and "+m[1]+" make "+m[2]}));
+     [["The sky is…","El cielo es…","blue"],["Grass is…","El pasto es…","green"],["A banana is…","Una banana es…","yellow"],["Snow is…","La nieve es…","white"]].forEach((x,i)=>q.push({key:"is"+i,type:"choice",hint:"Completá",big:x[0],sub:x[1],answer:x[2],options:pick(x[2],all),say:x[0].replace("…"," "+x[2])}));
+     return q; }},
+  {id:"things", name:"Cosas", ic:"🎒", kind:"vocab", items:[{en:"pencil",es:"lápiz",v:"✏️"},{en:"book",es:"libro",v:"📕"},{en:"backpack",es:"mochila",v:"🎒"},{en:"chair",es:"silla",v:"🪑"},{en:"ball",es:"pelota",v:"⚽"},{en:"clock",es:"reloj",v:"⏰"},{en:"bed",es:"cama",v:"🛏️"},{en:"door",es:"puerta",v:"🚪"},{en:"computer",es:"computadora",v:"💻"},{en:"scissors",es:"tijera",v:"✂️"},{en:"apple",es:"manzana",v:"🍎"},{en:"dog",es:"perro",v:"🐶"},{en:"cat",es:"gato",v:"🐱"},{en:"house",es:"casa",v:"🏠"}]}
+]},
+{ name:"Frases del día", sub:"Frases simples para todos los días", topics:[
+  {id:"greet", name:"Saludos", ic:"👋", kind:"phrases", items:ph([["Hello!","¡Hola!"],["Good morning!","¡Buen día!"],["Good night!","¡Buenas noches!"],["How are you?","¿Cómo estás?"],["I'm fine, thank you.","Estoy bien, gracias."],["What's your name?","¿Cómo te llamás?"],["My name is Ana.","Me llamo Ana."],["Nice to meet you.","Mucho gusto."],["See you later!","¡Hasta luego!"],["Goodbye!","¡Chau!"]])},
+  {id:"school", name:"En la escuela", ic:"🏫", kind:"phrases", items:ph([["Can I go to the bathroom?","¿Puedo ir al baño?"],["Open your book.","Abrí tu libro."],["Sit down, please.","Sentate, por favor."],["I don't understand.","No entiendo."],["Can you repeat, please?","¿Podés repetir, por favor?"],["Raise your hand.","Levantá la mano."],["Let's play!","¡Juguemos!"],["I finished!","¡Terminé!"]])},
+  {id:"me", name:"Cómo estoy y qué me gusta", ic:"😋", kind:"phrases", items:ph([["I'm hungry.","Tengo hambre."],["I'm thirsty.","Tengo sed."],["I'm tired.","Estoy cansado."],["I'm happy.","Estoy feliz."],["I like pizza.","Me gusta la pizza."],["I don't like soup.","No me gusta la sopa."],["I have a dog.","Tengo un perro."],["I'm ten years old.","Tengo diez años."]])}
+]},
+{ name:"Presente", sub:"Lo que hacés siempre y lo que pasa ahora", topics:[
+  {id:"psimple", name:"Presente simple", ic:"🔁", kind:"grammar", tip:"<b>Presente simple</b> = cosas que hacés siempre o seguido. Con <b>he / she / it</b> se agrega -s o -es: I play → she plays, he watches.",
+   blanks:[["She ___ soccer every day.","plays",["play","playing"],"Ella juega al fútbol todos los días."],["I ___ milk in the morning.","drink",["drinks","drinking"],"Tomo leche a la mañana."],["My dad ___ in a hospital.","works",["work","working"],"Mi papá trabaja en un hospital."],["They ___ to school by bus.","go",["goes","going"],"Ellos van a la escuela en colectivo."],["He ___ TV after dinner.","watches",["watch","watchs"],"Él mira tele después de cenar."],["We ___ English on Mondays.","have",["has","having"],"Tenemos inglés los lunes."],["The cat ___ fish.","likes",["like","liking"],"Al gato le gusta el pescado."],["Does she ___ pizza?","like",["likes","liking"],"¿A ella le gusta la pizza?"],["I don't ___ coffee.","drink",["drinks","drinking"],"No tomo café."],["Tom ___ not play tennis.","does",["do","is"],"Tom no juega al tenis."]]},
+  {id:"myday", name:"Mi día", ic:"⏰", kind:"phrases", tip:"Para contar tu rutina usás el <b>presente simple</b>.", items:ph([["I wake up at seven.","Me despierto a las siete."],["I get dressed.","Me visto."],["I have breakfast.","Desayuno."],["I brush my teeth.","Me cepillo los dientes."],["I go to school.","Voy a la escuela."],["I do my homework.","Hago la tarea."],["I play with my friends.","Juego con mis amigos."],["I go to bed at ten.","Me voy a dormir a las diez."]])},
+  {id:"pcont", name:"Presente continuo", ic:"🏃", kind:"grammar", tip:"<b>Presente continuo</b> = lo que está pasando ahora. <b>am / is / are</b> + verbo con <b>-ing</b>: I am eating, she is running.",
+   blanks:[["I am ___ a book.","reading",["read","reads"],"Estoy leyendo un libro."],["She is ___ with her friends.","playing",["play","plays"],"Ella está jugando con sus amigos."],["They ___ running in the park.","are",["is","am"],"Ellos están corriendo en el parque."],["The baby ___ sleeping.","is",["are","am"],"El bebé está durmiendo."],["We are ___ lunch.","eating",["eat","eats"],"Estamos almorzando."],["Look! It ___ raining.","is",["are","am"],"¡Mirá! Está lloviendo."],["What are you ___?","doing",["do","does"],"¿Qué estás haciendo?"],["I ___ drawing a picture.","am",["is","are"],"Estoy haciendo un dibujo."]]}
+]},
+{ name:"Futuro y condicionales", sub:"Will, going to y frases con if", topics:[
+  {id:"will", name:"Futuro con will", ic:"🔮", kind:"grammar", tip:"<b>will</b> + verbo = predicciones, promesas y decisiones del momento: I will help you. Negativo: <b>won't</b>.",
+   blanks:[["Tomorrow it ___ rain.","will",["is","does"],"Mañana va a llover."],["I think I ___ be a doctor.","will",["am","do"],"Creo que voy a ser doctor."],["Don't worry, I ___ help you!","will",["am","was"],"¡Tranqui, te voy a ayudar!"],["She won't ___ late.","be",["is","being"],"Ella no va a llegar tarde."],["Will you come to my party? Yes, I ___.","will",["do","am"],"¿Vas a venir a mi cumple? Sí."],["We will ___ the game!","win",["wins","winning"],"¡Vamos a ganar el partido!"]]},
+  {id:"goingto", name:"Futuro con going to", ic:"🧳", kind:"grammar", tip:"<b>am / is / are + going to</b> + verbo = planes que ya decidiste: I am going to visit my grandma.",
+   blanks:[["I am ___ to visit my grandma.","going",["go","goes"],"Voy a visitar a mi abuela."],["Look at the clouds! It is going to ___.","rain",["rains","raining"],"¡Mirá las nubes! Va a llover."],["We ___ going to play football.","are",["is","am"],"Vamos a jugar al fútbol."],["He is going to ___ a cake.","make",["makes","making"],"Él va a hacer una torta."],["Are you going ___ watch the movie?","to",["for","at"],"¿Vas a ver la película?"],["She ___ going to swim.","is",["are","am"],"Ella va a nadar."]]},
+  {id:"cond", name:"Condicionales (if)", ic:"🔀", kind:"grammar", tip:"<b>If</b> + presente, <b>will</b> + verbo: If it rains, I will stay home. Para cosas que siempre pasan: If you heat ice, it melts.",
+   blanks:[["If it rains, I ___ stay home.","will",["am","did"],"Si llueve, me voy a quedar en casa."],["If you heat ice, it ___.","melts",["melt","melting"],"Si calentás hielo, se derrite."],["If you study, you ___ pass the test.","will",["are","do"],"Si estudiás, vas a aprobar la prueba."],["If I ___ time, I will call you.","have",["will have","had"],"Si tengo tiempo, te llamo."],["If she is hungry, she ___ eat a sandwich.","will",["is","does"],"Si tiene hambre, va a comer un sándwich."],["If you mix red and yellow, you ___ orange.","get",["gets","getting"],"Si mezclás rojo y amarillo, obtenés naranja."],["If I had wings, I ___ fly.","would",["will","am"],"Si tuviera alas, volaría."]]}
+]},
+{ name:"Pasado", sub:"Lo que ya pasó", topics:[
+  {id:"waswere", name:"Was / were", ic:"🕰️", kind:"grammar", tip:"<b>was</b> con I / he / she / it. <b>were</b> con you / we / they.",
+   blanks:[["Yesterday I ___ at the park.","was",["were","am"],"Ayer estuve en el parque."],["They ___ very happy.","were",["was","is"],"Ellos estaban muy felices."],["It ___ cold last night.","was",["were","is"],"Anoche hizo frío."],["We ___ at school.","were",["was","are"],"Estábamos en la escuela."],["___ you at home?","Were",["Was","Is"],"¿Estabas en tu casa?"],["My dog ___ in the garden.","was",["were","are"],"Mi perro estaba en el jardín."]]},
+  {id:"regular", name:"Verbos regulares", ic:"✅", kind:"grammar", tip:"Verbos <b>regulares</b>: se agrega <b>-ed</b>. play → played, watch → watched, visit → visited.",
+   blanks:[["I ___ football yesterday.","played",["play","playing"],"Ayer jugué al fútbol."],["She ___ her room.","cleaned",["clean","cleaning"],"Ella limpió su cuarto."],["We ___ a movie last night.","watched",["watch","watching"],"Anoche vimos una película."],["He ___ to music.","listened",["listen","listens"],"Él escuchó música."],["They ___ in the pool.","jumped",["jump","jumping"],"Ellos saltaron en la pileta."],["I ___ my grandma on Sunday.","visited",["visit","visiting"],"El domingo visité a mi abuela."],["The class ___ at nine.","started",["start","starting"],"La clase empezó a las nueve."]]},
+  {id:"irregular", name:"Verbos irregulares", ic:"⚡", kind:"grammar", tip:"Los <b>irregulares</b> cambian: go → went, eat → ate, see → saw, have → had, run → ran, swim → swam, buy → bought. ¡Hay que aprenderlos!",
+   blanks:[["Last summer we ___ to the beach.","went",["goed","go"],"El verano pasado fuimos a la playa."],["I ___ a big ice cream.","ate",["eated","eat"],"Me comí un helado grande."],["She ___ a rainbow.","saw",["seed","see"],"Ella vio un arcoíris."],["We ___ a lot of fun.","had",["haved","have"],"Nos divertimos mucho."],["He ___ very fast.","ran",["runned","run"],"Él corrió muy rápido."],["They ___ in the river.","swam",["swimmed","swim"],"Ellos nadaron en el río."],["Mom ___ a new bike for me.","bought",["buyed","buy"],"Mamá me compró una bici nueva."],["I ___ a sandcastle.","made",["maked","make"],"Hice un castillo de arena."]]}
+]}
+];
+LEVELS.forEach((L,i)=>{L.n=i+1;L.color=COLORS[i];});
+
+/* ============ HELPERS ============ */
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pick(ans, pool, n){n=n||4;const others=shuffle(pool.filter(x=>x!==ans)).slice(0,n-1);return shuffle([ans,...others]);}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ============ STORAGE ============ */
+const KEY="aventura-english-v1";
+let prog={stars:{},teacher:false};
+try{const s=localStorage.getItem(KEY);if(s)prog=Object.assign(prog,JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(prog));}catch(e){}}
+
+/* ============ SOUND + VOICE ============ */
+let soundOn=true, actx=null;
+const canSpeak=("speechSynthesis" in window)&&typeof SpeechSynthesisUtterance!=="undefined";
+let enVoice=null;
+function loadVoice(){try{const v=speechSynthesis.getVoices();enVoice=v.find(x=>/en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null;}catch(e){}}
+if(canSpeak){loadVoice();try{speechSynthesis.onvoiceschanged=loadVoice;}catch(e){}}
+function speak(t){if(!soundOn||!canSpeak||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.85;if(enVoice)u.voice=enVoice;speechSynthesis.speak(u);}catch(e){}}
+function tone(freqs,dur,type){if(!soundOn)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();let t=actx.currentTime;freqs.forEach(f=>{const o=actx.createOscillator(),g=actx.createGain();o.type=type||"triangle";o.frequency.value=f;g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+dur);t+=dur*.8;});}catch(e){}}
+const sfx={ok:()=>tone([660,880],.14),no:()=>tone([220,180],.2,"sawtooth"),win:()=>tone([523,659,784,1046],.16)};
+$("soundBtn").onclick=function(){soundOn=!soundOn;this.textContent=soundOn?"🔊":"🔇";this.setAttribute("aria-pressed",soundOn);if(!soundOn&&canSpeak)try{speechSynthesis.cancel();}catch(e){}};
+
+/* ============ PROGRESS ============ */
+const topicStars=id=>prog.stars[id]||0;
+const levelDone=L=>L.topics.filter(t=>topicStars(t.id)>0).length;
+const needFor=L=>Math.ceil(L.topics.length/2);
+function unlocked(n){if(n===1||prog.teacher)return true;const P=LEVELS[n-2];return levelDone(P)>=needFor(P);}
+function starsHtml(n,max){let s="";for(let i=0;i<max;i++)s+=i<n?"★":'<span class="off">★</span>';return s;}
+function updateTotal(){$("totalStars").textContent=Object.values(prog.stars).reduce((a,b)=>a+b,0);}
+
+/* ============ NAV ============ */
+const screens=["home","level","learn","play","result"];
+let cur="home", curLevel=null, curTopic=null;
+function show(name){screens.forEach(s=>$("scr-"+s).hidden=s!==name);cur=name;$("backBtn").hidden=name==="home";window.scrollTo(0,0);}
+$("backBtn").onclick=()=>{if(canSpeak)try{speechSynthesis.cancel();}catch(e){}
+  if(cur==="level")goHome();else if(cur==="learn"||cur==="result"||cur==="play")openLevel(curLevel);};
+
+/* ============ HOME ============ */
+function goHome(){renderMap();show("home");}
+function renderMap(){
+  const m=$("map");m.innerHTML="";
+  LEVELS.forEach(L=>{
+    const open=unlocked(L.n), b=document.createElement("button");
+    b.className="stop";b.style.setProperty("--c","var(--"+L.color+")");b.style.setProperty("--d","var(--"+L.color+"-deep)");
+    const got=L.topics.reduce((a,t)=>a+topicStars(t.id),0), max=L.topics.length*3;
+    b.innerHTML='<div class="num">'+(open?L.n:"🔒")+'</div><div class="stop-body"><p>Nivel '+L.n+'</p><h3>'+L.name+'</h3><p>'+L.sub+'</p>'+
+      (open?'<div class="stars" aria-label="'+got+' de '+max+' estrellas">'+got+' / '+max+' ★</div>':'<div class="lock">Completá '+needFor(LEVELS[L.n-2])+' temas del nivel '+(L.n-1)+' para abrirlo</div>')+'</div>';
+    if(!open)b.disabled=true;else b.onclick=()=>openLevel(L);
+    m.appendChild(b);
+  });
+  $("teacher").checked=!!prog.teacher;updateTotal();
+}
+$("teacher").onchange=e=>{prog.teacher=e.target.checked;save();renderMap();};
+function resetUI(){
+  const w=$("resetWrap");
+  w.innerHTML='<span class="confirm">¿Borrar todas las estrellas? <button class="btn tomato" id="rsYes" style="padding:6px 12px;font-size:.95rem">Sí, borrar</button><button class="btn ghost" id="rsNo" style="padding:6px 12px;font-size:.95rem">No</button></span>';
+  $("rsYes").onclick=()=>{prog.stars={};save();restore();renderMap();};
+  $("rsNo").onclick=restore;
+  function restore(){w.innerHTML='<button class="linkbtn" id="resetBtn">Borrar progreso</button>';$("resetBtn").onclick=resetUI;}
+}
+$("resetBtn").onclick=resetUI;
+
+/* ============ LEVEL ============ */
+function openLevel(L){
+  curLevel=L;const c="var(--"+L.color+")";
+  $("lvlNum").textContent=L.n;$("lvlNum").style.background=c;
+  $("lvlName").textContent="Nivel "+L.n+": "+L.name;$("lvlSub").textContent=L.sub;
+  const box=$("topics");box.innerHTML="";
+  L.topics.forEach(t=>{
+    const d=document.createElement("div");d.className="topic";
+    d.innerHTML='<div class="ic">'+t.ic+'</div><h3>'+t.name+'</h3><div class="stars">'+starsHtml(topicStars(t.id),3)+'</div><div class="row"><button class="btn ghost" data-a="learn">Aprender</button><button class="btn" data-a="play" style="--c:'+c+';--d:var(--'+L.color+'-deep)">Jugar ▶</button></div>';
+    d.querySelector('[data-a="learn"]').onclick=()=>openLearn(t);
+    d.querySelector('[data-a="play"]').onclick=()=>startGame(t);
+    box.appendChild(d);
+  });
+  show("level");
+}
+
+/* ============ LEARN ============ */
+function learnItems(t){return t.kind==="grammar"?t.blanks.map(b=>({en:b[0].replace("___",b[1]),es:b[3]})):t.items;}
+function openLearn(t){
+  curTopic=t;const L=curLevel;
+  $("learnIc").textContent=t.ic;$("learnIc").style.background="var(--"+L.color+")";$("learnName").textContent=t.name;
+  $("learnTip").innerHTML=t.tip?'<div class="tip" style="--c:var(--'+L.color+'-deep)">'+t.tip+'</div>':"";
+  const list=$("learnList");list.innerHTML="";
+  const items=learnItems(t);
+  if(t.kind==="vocab"){
+    const g=document.createElement("div");g.className="cards";
+    items.forEach(it=>{const b=document.createElement("button");b.className="fcard";b.style.setProperty("--c","var(--"+L.color+")");
+      b.innerHTML='<div class="v">'+(it.c?'<span class="swatch" style="background:'+it.c+'"></span>':(it.v||'<span class="spk">🔈</span>'))+'</div><div class="en">'+esc(it.en)+'</div><div class="es">'+esc(it.es)+'</div>';
+      b.onclick=()=>{speak(it.en);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");};g.appendChild(b);});
+    list.appendChild(g);
+  }else{
+    const g=document.createElement("div");g.className="sentences";
+    items.forEach(it=>{const b=document.createElement("button");b.className="sent";
+      b.innerHTML='<span class="spk">🔈</span><span class="t"><div class="en">'+esc(it.en)+'</div><div class="es">'+esc(it.es)+'</div></span>';
+      b.onclick=()=>speak(it.en);g.appendChild(b);});
+    list.appendChild(g);
+  }
+  show("learn");
+}
+$("learnPlay").onclick=()=>startGame(curTopic);
+
+/* ============ QUESTION GENERATION ============ */
+function genQuestions(t){
+  const q=[];
+  if(t.kind==="vocab"){
+    const en=t.items.map(i=>i.en), es=t.items.map(i=>i.es);
+    t.items.forEach(it=>{
+      if(it.v||it.c) q.push({key:it.en,type:"choice",hint:it.c?"¿De qué color es?":"¿Cómo se dice en inglés?",vis:it.v,sw:it.c,answer:it.en,options:pick(it.en,en),say:it.en,es:it.es});
+      q.push({key:it.en,type:"choice",hint:"Traducí al inglés",big:it.es,answer:it.en,options:pick(it.en,en),say:it.en});
+      q.push({key:it.en,type:"choice",hint:"¿Qué significa?",big:it.en,answer:it.es,options:pick(it.es,es),say:it.en,sayFirst:true});
+      if(canSpeak) q.push({key:it.en,type:"choice",hint:"Escuchá y elegí",listen:it.en,answer:it.en,options:pick(it.en,en),say:it.en,es:it.es});
+    });
+    if(t.extra) q.push(...t.extra());
+  }else if(t.kind==="phrases"){
+    const en=t.items.map(i=>i.en), es=t.items.map(i=>i.es);
+    t.items.forEach(it=>{
+      q.push({key:it.en,type:"choice",hint:"¿Cómo se dice en inglés?",big:it.es,answer:it.en,options:pick(it.en,en),say:it.en});
+      q.push({key:it.en,type:"choice",hint:"¿Qué significa?",big:it.en,answer:it.es,options:pick(it.es,es),say:it.en,sayFirst:true});
+      q.push({key:it.en,type:"order",hint:"Armá la frase en inglés",sub:it.es,answer:it.en,say:it.en});
+      if(canSpeak) q.push({key:it.en,type:"choice",hint:"Escuchá y elegí",listen:it.en,answer:it.en,options:pick(it.en,en),say:it.en,es:it.es});
+    });
+  }else{
+    t.blanks.forEach(b=>{
+      const full=b[0].replace("___",b[1]);
+      q.push({key:b[0],type:"choice",hint:"Completá la frase",blank:b[0],sub:b[3],answer:b[1],options:shuffle([b[1],...b[2]]),say:full,es:b[3]});
+      q.push({key:b[0],type:"choice",hint:"Completá la frase",blank:b[0],sub:b[3],answer:b[1],options:shuffle([b[1],...b[2]]),say:full,es:b[3]});
+      if(full.split(" ").length<=9) q.push({key:b[0],type:"order",hint:"Armá la frase en inglés",sub:b[3],answer:full,say:full});
+    });
+  }
+  // pick 10 with unique keys where possible
+  const out=[],used=new Set();
+  shuffle(q).forEach(x=>{if(out.length<10&&!used.has(x.key)){used.add(x.key);out.push(x);}});
+  shuffle(q).forEach(x=>{if(out.length<10&&!out.includes(x))out.push(x);});
+  return out;
+}
+
+/* ============ GAME ============ */
+let G=null;
+const PRAISE=["Great job!","Awesome!","Well done!","Super!","Excellent!","You got it!"];
+function startGame(t){
+  curTopic=t;
+  G={t,qs:genQuestions(t),i:0,hearts:3,score:0,streak:0,miss:0,done:false};
+  show("play");renderQ();
+}
+function hud(){
+  $("bar").style.width=(G.i/G.qs.length*100)+"%";
+  $("hearts").innerHTML=starsHtml(G.hearts,3).replace(/★/g,"♥");
+  $("score").textContent=G.score;
+}
+function renderQ(){
+  hud();G.done=false;$("feedback").hidden=true;
+  const q=G.qs[G.i],c=$("qcard"),a=$("answers");
+  let h='<div class="qhint">'+esc(q.hint)+'</div>';
+  if(q.vis)h+='<div class="qvis">'+q.vis+'</div>';
+  if(q.sw)h+='<div class="qvis"><span class="swatch big" style="background:'+q.sw+'"></span></div>';
+  if(q.listen)h+='<button class="listen" id="lsBtn" aria-label="Escuchar de nuevo">🔊</button><div><button class="linkbtn hintbtn" id="lsHint">¿No se escucha? Ver pista</button></div>';
+  if(q.big)h+='<div class="qbig">'+esc(q.big)+'</div>';
+  if(q.blank)h+='<div class="qbig">'+esc(q.blank).replace("___",'<span class="blank">&nbsp;?&nbsp;</span>')+'</div>';
+  if(q.sub)h+='<div class="qsub">'+esc(q.sub)+'</div>';
+  c.innerHTML=h;c.classList.remove("pop");void c.offsetWidth;c.classList.add("pop");
+  if(q.listen){$("lsBtn").onclick=()=>speak(q.listen);$("lsHint").onclick=function(){this.outerHTML='<div class="qsub">Pista: significa “'+esc(q.es)+'”</div>';};setTimeout(()=>speak(q.listen),250);}
+  if(q.sayFirst)setTimeout(()=>speak(q.big),250);
+  a.innerHTML="";
+  if(q.type==="choice"){
+    const g=document.createElement("div");g.className="opts";
+    q.options.forEach(o=>{const b=document.createElement("button");b.className="opt";b.textContent=o;b.onclick=()=>choose(b,o);g.appendChild(b);});
+    a.appendChild(g);
+  }else{
+    const words=q.answer.split(" ");
+    const slot=document.createElement("div");slot.className="slot";slot.id="slot";
+    const bank=document.createElement("div");bank.className="bank";
+    const order=shuffle(words.map((w,i)=>i));
+    if(order.every((v,i)=>v===i)&&words.length>1)order.reverse();
+    const picked=[];
+    order.forEach(i=>{const b=document.createElement("button");b.className="tile";b.textContent=words[i];
+      b.onclick=()=>{if(G.done)return;b.classList.add("used");picked.push(i);
+        const s=document.createElement("button");s.className="tile";s.textContent=words[i];
+        s.onclick=()=>{if(G.done)return;picked.splice(picked.indexOf(i),1);s.remove();b.classList.remove("used");};
+        slot.appendChild(s);};
+      bank.appendChild(b);});
+    const chk=document.createElement("div");chk.className="center";
+    chk.innerHTML='<button class="btn grape" id="chkBtn" style="--c:var(--grape);--d:var(--grape-deep)">Comprobar</button>';
+    a.append(slot,bank,chk);
+    $("chkBtn").onclick=()=>{if(G.done)return;if(!picked.length)return;
+      const ok=picked.map(i=>words[i]).join(" ")===q.answer;
+      $("chkBtn").disabled=true;
+      slot.style.borderColor=ok?"var(--leaf)":"var(--tomato)";
+      result(ok);};
+  }
+}
+function choose(btn,o){
+  if(G.done)return;const q=G.qs[G.i],ok=o===q.answer;
+  document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;if(b.textContent===q.answer)b.classList.add("ok");});
+  if(!ok)btn.classList.add("no");
+  result(ok);
+}
+function result(ok){
+  G.done=true;const q=G.qs[G.i];
+  if(ok){G.streak++;G.score+=10+(G.streak>=3?5:0);sfx.ok();}
+  else{G.streak=0;G.miss++;G.hearts--;sfx.no();}
+  setTimeout(()=>speak(q.say),ok?250:450);
+  const fb=$("feedback");fb.hidden=false;fb.classList.toggle("bad",!ok);
+  const extra=q.es&&q.type!=="order"&&!q.blank?' <span>('+esc(q.es)+')</span>':(q.blank?'<span>'+esc(q.say)+'</span>':'');
+  $("fbMsg").innerHTML=ok
+    ?'<strong>'+PRAISE[Math.floor(Math.random()*PRAISE.length)]+(G.streak>=3?' 🔥 x'+G.streak:'')+'</strong>'+(q.blank?extra:'<span>'+esc(q.answer)+'</span>'+extra)
+    :'<strong>¡Casi! Oops…</strong><span>La respuesta es: <b>'+esc(q.type==="order"?q.answer:q.answer)+'</b></span>'+(q.blank?'<br>'+extra:'');
+  $("nextBtn").className="btn "+(ok?"leaf":"tomato");
+  hud();$("nextBtn").focus({preventScroll:true});
+}
+$("nextBtn").onclick=next;
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&cur==="play"&&G&&G.done&&!$("feedback").hidden&&document.activeElement!==$("nextBtn")){e.preventDefault();next();}});
+function next(){
+  if(G.hearts<=0)return finish(false);
+  G.i++;if(G.i>=G.qs.length)return finish(true);
+  renderQ();
+}
+function finish(win){
+  $("bar").style.width="100%";
+  const mouth=$("resMouth");
+  if(win){
+    const st=G.miss===0?3:G.miss<=2?2:1;
+    const before=topicStars(G.t.id);if(st>before){prog.stars[G.t.id]=st;save();}
+    updateTotal();
+    $("resTitle").textContent=st===3?"Perfect! ¡Perfecto!":st===2?"Great job! ¡Muy bien!":"Good! ¡Lo lograste!";
+    $("resStars").innerHTML=starsHtml(st,3);
+    const nextL=LEVELS[curLevel.n];const justOpened=nextL&&!prog.teacher&&levelDone(curLevel)===needFor(curLevel)&&before===0;
+    $("resText").textContent=G.score+" puntos en "+G.t.name+"."+(justOpened?" ¡Abriste el nivel "+nextL.n+"!":"")+(st<3?" Jugá de nuevo sin errores para ganar 3 estrellas.":"");
+    mouth.setAttribute("d","M40 66 Q50 78 60 66");
+    sfx.win();speak(st===3?"Perfect!":"Great job!");confetti();
+  }else{
+    $("resTitle").textContent="¡Uy! Te quedaste sin vidas";
+    $("resStars").innerHTML=starsHtml(0,3);
+    $("resText").textContent="No pasa nada: repasá en Aprender y probá otra vez. Try again!";
+    mouth.setAttribute("d","M40 70 Q50 62 60 70");
+  }
+  show("result");
+}
+$("resRetry").onclick=()=>startGame(curTopic);
+$("resBack").onclick=()=>openLevel(curLevel);
+
+/* ============ CONFETTI ============ */
+function confetti(){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const cv=$("confetti"),ctx=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;
+  const cols=["#2d7ff0","#22a565","#ffbf1f","#8a55e8","#ff5846"];
+  const P=Array.from({length:140},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,r:4+Math.random()*6,c:cols[Math.floor(Math.random()*5)],vy:2+Math.random()*3,vx:-1.5+Math.random()*3,a:Math.random()*6,va:-.2+Math.random()*.4}));
+  let f=0;(function step(){ctx.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=p.va;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.fillStyle=p.c;ctx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);ctx.restore();});
+    if(++f<200)requestAnimationFrame(step);else ctx.clearRect(0,0,cv.width,cv.height);})();
+}
+
+goHome();
+})();
+</script>
+
+</body>
+</html>
