@@ -3,13 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Aventura English</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-/* Layout: a notebook-page game board. Home = a winding path of 5 level stops; each level opens topic cards; play = one big question card. */
+html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}
 :root{
   --paper:#f2f7ff; --grid:#d8e5fb; --card:#ffffff; --ink:#1c2848; --muted:#5a6788; --edge:#c9d6f0;
   --sky:#2d7ff0; --sky-deep:#1b5fc0;
@@ -17,7 +16,11 @@
   --sun:#ffbf1f; --sun-deep:#d99a00;
   --grape:#8a55e8; --grape-deep:#6a38c4;
   --tomato:#ff5846; --tomato-deep:#d63a2a;
-  --good-bg:#dcf7e8; --bad-bg:#ffe3df; --star:#ffb400; --star-off:#d5dcec;
+  --teal:#14a8a2; --teal-deep:#0c7f7a;
+  --navy:#4a5fe0; --navy-deep:#3143b5;
+  --pink:#e8509a; --pink-deep:#bb3378;
+  --ember:#ef7d1a; --ember-deep:#bf5f0b;
+  --good-bg:#dcf7e8; --bad-bg:#ffe3df; --star:#ffb400; --star-off:#d5dcec; --gold:#f5b301;
   --display:'Baloo 2', 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif;
   --body:'Nunito', 'Segoe UI', system-ui, sans-serif;
 }
@@ -35,184 +38,346 @@ body{
   background-image:linear-gradient(var(--grid) 1px, transparent 1px),linear-gradient(90deg,var(--grid) 1px, transparent 1px);
   background-size:28px 28px;
   color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.5;
-  padding-inline:16px; padding-block:0 48px; min-height:100%;
+  padding-inline:16px; padding-block:0 48px; min-height:100%; overflow-x:hidden;
 }
 button{font:inherit;color:inherit}
 h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
-.app{max-width:880px;margin:0 auto}
+.app{max-width:920px;margin:0 auto}
+:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
 
 /* top bar */
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:10px;padding-block:12px;background:var(--paper);border-bottom:2px dashed var(--edge);margin-bottom:20px}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;display:flex;align-items:center;gap:8px;padding-block:10px;background:var(--paper);border-bottom:2px dashed var(--edge);margin-bottom:18px}
 .brand{font-family:var(--display);font-weight:800;font-size:1.25rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand b{color:var(--tomato)}
-.pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--edge);border-radius:999px;padding:4px 12px;font-weight:800;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:2px solid var(--edge);border-radius:999px;padding:3px 10px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill .s{color:var(--star)}
-.iconbtn{background:var(--card);border:2px solid var(--edge);border-radius:12px;padding:6px 10px;cursor:pointer;font-weight:800}
-.iconbtn:focus-visible,.btn:focus-visible,.opt:focus-visible,.tile:focus-visible,.stop:focus-visible,.topic button:focus-visible,.fcard:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+.pill.bump{animation:pop .4s}
+.iconbtn{background:var(--card);border:2px solid var(--edge);border-radius:12px;padding:5px 9px;cursor:pointer;font-weight:800;white-space:nowrap}
+.avbtn{font-size:1.3rem;padding:2px 8px}
 
-/* chunky game buttons */
-.btn{--c:var(--sky);--d:var(--sky-deep);display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;padding:12px 20px;font-family:var(--display);font-weight:800;font-size:1.1rem;color:#fff;background:var(--c);box-shadow:0 5px 0 var(--d);cursor:pointer;transition:transform .08s,box-shadow .08s}
+/* buttons */
+.btn{--c:var(--sky);--d:var(--sky-deep);display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;padding:12px 20px;font-family:var(--display);font-weight:800;font-size:1.1rem;color:#fff;background:var(--c);box-shadow:0 5px 0 var(--d);cursor:pointer;transition:transform .08s,box-shadow .08s;text-decoration:none}
 .btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--d)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
 .btn.ghost{background:var(--card);color:var(--ink);box-shadow:0 5px 0 var(--edge);border:2px solid var(--edge)}
 .btn.sun{--c:var(--sun);--d:var(--sun-deep);color:#3a2a00}
 .btn.leaf{--c:var(--leaf);--d:var(--leaf-deep)}
 .btn.tomato{--c:var(--tomato);--d:var(--tomato-deep)}
+.btn.grape{--c:var(--grape);--d:var(--grape-deep)}
+.btn.small{padding:7px 12px;font-size:.95rem;border-radius:12px}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-weight:700}
 
 /* home */
-.hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:26px}
-.mascot{width:108px;height:108px;flex:none}
+.hero{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.mascot{width:100px;height:100px;flex:none}
+.mascot.bob{animation:bob 2.6s ease-in-out infinite}
 .hero-text{flex:1;min-width:0}
-.hero h1{font-size:clamp(2.2rem,7vw,3.4rem);font-weight:800;letter-spacing:-.01em}
+.hero h1{font-size:clamp(2.1rem,7vw,3.3rem);font-weight:800;letter-spacing:-.01em}
 .hero h1 span{color:var(--sky)}
-.bubble{display:inline-block;position:relative;background:var(--card);border:2px solid var(--edge);border-radius:18px;padding:8px 14px;font-weight:700;margin-top:8px;max-width:34rem}
-.map{position:relative;display:grid;gap:22px;padding-block:6px}
-.map::before{content:"";position:absolute;left:50%;top:20px;bottom:20px;border-left:4px dashed var(--edge);transform:translateX(-2px)}
-.stop{--c:var(--sky);--d:var(--sky-deep);position:relative;display:flex;gap:14px;align-items:center;width:min(100%,560px);text-align:left;background:var(--card);border:3px solid var(--c);border-radius:22px;padding:14px 16px;box-shadow:0 6px 0 var(--d);cursor:pointer}
-.stop:nth-child(odd){justify-self:start}.stop:nth-child(even){justify-self:end}
-.stop[disabled]{cursor:not-allowed;border-color:var(--edge);box-shadow:0 6px 0 var(--edge)}
-.stop[disabled] .num{background:var(--star-off)}
-.num{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;font-family:var(--display);font-weight:800;font-size:1.8rem}
-.stop-body{flex:1;min-width:0}
-.stop h3{font-size:1.35rem}
-.stop p{margin:0;color:var(--muted);font-weight:700;font-size:.95rem}
+.bubble{display:inline-block;background:var(--card);border:2px solid var(--edge);border-radius:18px;padding:8px 14px;font-weight:700;margin-top:6px;max-width:36rem}
+.panel{background:var(--card);border:2px solid var(--edge);border-radius:22px;padding:16px}
+.player{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.avatar{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:2.6rem;background:var(--paper);border:3px solid var(--sun);flex:none;cursor:pointer}
+.player .info{flex:1;min-width:180px}
+.player .nm{font-family:var(--display);font-weight:800;font-size:1.35rem;line-height:1.1}
+.player .ttl{color:var(--muted);font-weight:800;font-size:.92rem}
+.xpbar{height:14px;background:var(--paper);border:2px solid var(--edge);border-radius:999px;overflow:hidden;margin-top:6px}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--grape),var(--sky));border-radius:999px;transition:width .5s}
+.player .acts{display:flex;gap:8px;flex-wrap:wrap}
+
+.cup{display:flex;gap:16px;align-items:center;flex-wrap:wrap;border:3px solid var(--gold);background:linear-gradient(135deg,var(--card),var(--card) 60%,rgba(245,179,1,.14));margin-bottom:16px}
+.cup .trophy{font-size:3.4rem;line-height:1;filter:grayscale(1);opacity:.55;flex:none}
+.cup.won .trophy{filter:none;opacity:1;animation:bob 2s ease-in-out infinite}
+.cup .ci{flex:1;min-width:200px}
+.cup h2{font-size:1.4rem}
+.cup p{margin:2px 0 0;color:var(--muted);font-weight:700}
+.bigbar{height:20px;background:var(--paper);border:2px solid var(--edge);border-radius:999px;overflow:hidden;margin-top:8px;position:relative}
+.bigbar i{display:block;height:100%;background:linear-gradient(90deg,var(--sun),var(--gold));border-radius:999px;transition:width .6s}
+.bigbar span{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:.8rem}
+
+.arcade{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:26px}
+.arc{--c:var(--sky);background:var(--card);border:3px solid var(--c);border-radius:20px;padding:12px;cursor:pointer;text-align:center;display:grid;gap:2px;justify-items:center;box-shadow:0 5px 0 var(--c);transition:transform .08s}
+.arc:active{transform:translateY(3px);box-shadow:0 2px 0 var(--c)}
+.arc .e{font-size:2.2rem;line-height:1.2}
+.arc b{font-family:var(--display);font-size:1.1rem;line-height:1.1}
+.arc small{color:var(--muted);font-weight:700;line-height:1.2}
+.arc.glow{animation:glow 1.4s ease-in-out infinite}
+.arc[disabled]{opacity:.55;cursor:default;animation:none}
+
+.world{margin-bottom:28px}
+.whead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.whead .wi{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:1.9rem;background:var(--c);box-shadow:0 4px 0 var(--d);flex:none}
+.whead h2{font-size:1.5rem}
+.whead p{margin:0;color:var(--muted);font-weight:800;font-size:.9rem}
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.mod{position:relative;background:var(--card);border:3px solid var(--edge);border-radius:20px;padding:12px 10px 10px;cursor:pointer;display:grid;justify-items:center;gap:2px;text-align:center;box-shadow:0 5px 0 var(--edge);transition:transform .1s}
+.mod:hover{border-color:var(--c);transform:translateY(-2px)}
+.mod .e{font-size:2.4rem;line-height:1.2}
+.mod b{font-family:var(--display);font-size:1.05rem;line-height:1.15}
+.mod.done{border-color:var(--c);box-shadow:0 5px 0 var(--d)}
+.mod .chk{position:absolute;top:-10px;right:-8px;width:30px;height:30px;border-radius:50%;background:var(--leaf);color:#fff;display:grid;place-items:center;font-weight:800;border:3px solid var(--card)}
+.mod .new{position:absolute;top:-10px;left:-6px;background:var(--tomato);color:#fff;font-size:.7rem;font-weight:800;border-radius:999px;padding:1px 8px;border:2px solid var(--card)}
 .stars{color:var(--star);font-size:1.05rem;letter-spacing:2px;white-space:nowrap}
 .stars .off{color:var(--star-off)}
-.lock{font-size:.85rem;color:var(--muted);font-weight:800}
-.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;margin-top:34px;color:var(--muted);font-weight:700}
-.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
-.switch input{width:20px;height:20px;accent-color:var(--grape)}
-.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-weight:700}
-.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
-
-/* level */
-.lvl-head{display:flex;gap:14px;align-items:center;margin-bottom:18px}
-.lvl-head h2{font-size:2rem}
-.lvl-head p{margin:0;color:var(--muted);font-weight:700}
-.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
-.topic{background:var(--card);border:2px solid var(--edge);border-radius:20px;padding:16px;display:grid;gap:10px;align-content:start}
-.topic .ic{font-size:2.2rem;line-height:1}
-.topic h3{font-size:1.3rem}
-.topic .row{display:flex;gap:8px;flex-wrap:wrap}
-.topic .row .btn{padding:8px 14px;font-size:1rem;flex:1}
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;margin-top:24px;color:var(--muted);font-weight:700}
 
 /* learn */
-.tip{background:var(--card);border:2px dashed var(--c,var(--sky));border-radius:18px;padding:12px 16px;font-weight:700;margin-bottom:18px}
-.tip b{font-family:var(--display);color:var(--c,var(--sky))}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:22px}
-.fcard{background:var(--card);border:2px solid var(--edge);border-radius:18px;padding:12px;text-align:center;cursor:pointer;display:grid;gap:4px;justify-items:center}
+.lhead{display:flex;gap:14px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.lhead .ic{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:var(--c);font-size:2rem;flex:none;box-shadow:0 4px 0 var(--d)}
+.lhead .tx{flex:1;min-width:180px}
+.lhead h2{font-size:1.9rem}
+.lhead p{margin:0;color:var(--muted);font-weight:700}
+.tip{background:var(--card);border:2px dashed var(--c,var(--sky));border-radius:18px;padding:12px 16px;font-weight:700;margin-bottom:16px}
+.tip b{font-family:var(--display);color:var(--d,var(--sky-deep))}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:22px}
+.fcard{background:var(--card);border:2px solid var(--edge);border-radius:18px;padding:12px 8px;text-align:center;cursor:pointer;display:grid;gap:2px;justify-items:center;align-content:start}
 .fcard:hover{border-color:var(--c,var(--sky))}
-.fcard .v{font-size:2.4rem;line-height:1.2;min-height:2.9rem;display:grid;place-items:center}
-.fcard .en{font-family:var(--display);font-weight:800;font-size:1.3rem}
-.fcard .es{color:var(--muted);font-weight:700;font-size:.9rem}
+.fcard .v{font-size:2.6rem;line-height:1.2;min-height:3.2rem;display:grid;place-items:center}
+.fcard .en{font-family:var(--display);font-weight:800;font-size:1.25rem;line-height:1.15}
+.fcard.long .en{font-size:1.02rem}
+.fcard .es{color:var(--muted);font-weight:700;font-size:.88rem;line-height:1.2}
 .sentences{display:grid;gap:10px;margin-bottom:22px}
 .sent{display:flex;gap:12px;align-items:center;background:var(--card);border:2px solid var(--edge);border-radius:16px;padding:10px 14px;cursor:pointer;text-align:left}
 .sent .t{flex:1;min-width:0}
-.sent .en{font-weight:800;font-size:1.08rem}
-.sent .es{color:var(--muted);font-weight:700;font-size:.92rem}
+.sent .en{font-weight:800;font-size:1.06rem}
+.sent .es{color:var(--muted);font-weight:700;font-size:.9rem}
 .spk{flex:none;font-size:1.3rem}
-.swatch{width:46px;height:46px;border-radius:50%;border:3px solid var(--edge)}
-.swatch.big{width:96px;height:96px}
+
+/* visuals */
+.emo{display:inline-block;line-height:1}
+.swatch{display:inline-block;width:1em;height:1em;border-radius:50%;border:3px solid var(--edge);vertical-align:middle}
+.numvis{font-family:var(--display);font-weight:800;color:var(--sky);line-height:1}
+.clock{width:1.25em;height:1.25em;display:inline-block;vertical-align:middle}
+.scene{position:relative;display:inline-block;width:2.3em;height:1.6em;vertical-align:middle}
+.scene::after{content:"";position:absolute;left:4%;right:4%;bottom:4%;height:3px;background:var(--edge);border-radius:2px}
+.scene .o{position:absolute;transform:translateX(-50%);line-height:1}
+.scene .box{font-size:.62em}.scene .cat{font-size:.46em}.scene .tree{font-size:.8em}
+.scene .tbl{position:absolute;width:62%;height:62%;transform:translateX(-50%);border-top:.09em solid #b0703c;border-radius:3px}
+.scene .tbl::before,.scene .tbl::after{content:"";position:absolute;top:0;bottom:0;width:.06em;background:#b0703c}
+.scene .tbl::before{left:10%}.scene .tbl::after{right:10%}
+.pctv{display:inline-grid;gap:.08em;justify-items:center;vertical-align:middle}
+.pctv .pb{display:block;width:1.8em;height:.32em;border:2px solid var(--edge);border-radius:99px;background:var(--paper);overflow:hidden}
+.pctv .pb i{display:block;height:100%;background:var(--leaf)}
+.pctv b{font-family:var(--display);font-size:.32em;line-height:1}
 
 /* play */
-.hud{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.hud{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .bar{flex:1;height:16px;background:var(--card);border:2px solid var(--edge);border-radius:999px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--leaf);border-radius:999px;transition:width .3s}
-.hearts{font-size:1.3rem;letter-spacing:2px;white-space:nowrap;color:var(--tomato)}
+.hearts{font-size:1.25rem;letter-spacing:1px;white-space:nowrap;color:var(--tomato)}
 .hearts .off{color:var(--star-off)}
-.qcard{background:var(--card);border:3px solid var(--edge);border-radius:26px;padding:22px 18px;text-align:center;margin-bottom:18px}
-.qhint{color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;margin-bottom:10px}
+.combo{font-family:var(--display);font-weight:800;color:var(--tomato);min-height:1.6rem;text-align:center;font-size:1.1rem}
+.combo.hot{animation:pop .35s}
+.qcard{background:var(--card);border:3px solid var(--edge);border-radius:26px;padding:20px 16px;text-align:center;margin-bottom:16px;position:relative}
+.qhint{color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;margin-bottom:8px}
 .qvis{font-size:4.6rem;line-height:1.1;display:grid;place-items:center;min-height:5rem}
-.qbig{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,6vw,2.5rem);overflow-wrap:anywhere}
-.qbig .blank{display:inline-block;min-width:3.5em;border-bottom:4px solid var(--sun);color:var(--sun-deep)}
+.qbig{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,6vw,2.4rem);overflow-wrap:anywhere;line-height:1.2}
+.qbig .blank{display:inline-block;min-width:3.2em;border-bottom:4px solid var(--sun);color:var(--sun-deep)}
 .qsub{color:var(--muted);font-weight:700;margin-top:6px}
-.listen{font-size:3rem;width:110px;height:110px;border-radius:50%;border:0;background:var(--sun);box-shadow:0 6px 0 var(--sun-deep);cursor:pointer}
+.listen{font-size:3rem;width:104px;height:104px;border-radius:50%;border:0;background:var(--sun);box-shadow:0 6px 0 var(--sun-deep);cursor:pointer}
 .listen:active{transform:translateY(4px);box-shadow:0 2px 0 var(--sun-deep)}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.opt{background:var(--card);border:3px solid var(--edge);border-radius:18px;padding:14px 10px;font-family:var(--display);font-weight:700;font-size:1.25rem;cursor:pointer;box-shadow:0 5px 0 var(--edge);transition:transform .08s;overflow-wrap:anywhere}
+.opt{position:relative;background:var(--card);border:3px solid var(--edge);border-radius:18px;padding:14px 10px;font-family:var(--display);font-weight:700;font-size:1.2rem;cursor:pointer;box-shadow:0 5px 0 var(--edge);transition:transform .08s;overflow-wrap:anywhere;line-height:1.2}
+.opt.picopt{font-size:3rem;padding:10px;min-height:96px;display:grid;place-items:center}
+.opt .k{position:absolute;top:4px;left:8px;font-size:.7rem;color:var(--muted);font-family:var(--body)}
 .opt:hover:not([disabled]){border-color:var(--sky)}
 .opt:active:not([disabled]){transform:translateY(3px);box-shadow:0 2px 0 var(--edge)}
 .opt.ok{background:var(--good-bg);border-color:var(--leaf);box-shadow:0 5px 0 var(--leaf)}
 .opt.no{background:var(--bad-bg);border-color:var(--tomato);box-shadow:0 5px 0 var(--tomato);animation:shake .35s}
 .opt[disabled]{cursor:default}
 .slot{min-height:64px;border-bottom:3px dashed var(--edge);display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;padding:8px;margin-bottom:14px}
+.slot.seq{flex-direction:column;align-items:stretch;border:3px dashed var(--edge);border-radius:18px;counter-reset:s;min-height:120px}
+.slot.seq .tile{counter-increment:s;text-align:left}
+.slot.seq .tile::before{content:counter(s) ". ";color:var(--grape)}
 .bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}
 .tile{background:var(--card);border:3px solid var(--grape);border-radius:14px;padding:6px 12px;font-family:var(--display);font-weight:700;font-size:1.15rem;cursor:pointer;box-shadow:0 4px 0 var(--grape-deep)}
+.tile.letter{min-width:46px;font-size:1.5rem;text-transform:lowercase}
 .tile.used{visibility:hidden}
 .center{text-align:center}
-.feedback{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-top:18px;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:3px solid var(--leaf);background:var(--good-bg)}
+.feedback{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-top:16px;border-radius:20px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:3px solid var(--leaf);background:var(--good-bg);z-index:4}
 .feedback.bad{border-color:var(--tomato);background:var(--bad-bg)}
 .feedback .msg{flex:1;min-width:0}
-.feedback .msg strong{font-family:var(--display);font-size:1.35rem;display:block}
+.feedback .msg strong{font-family:var(--display);font-size:1.3rem;display:block}
 .feedback .msg span{font-weight:700}
-.hintbtn{margin-top:10px}
+
+.passage{text-align:left;background:var(--paper);border:2px solid var(--edge);border-radius:16px;padding:12px 14px;font-weight:700;line-height:1.55;margin-bottom:12px;max-height:46vh;overflow:auto}
+.qq{font-family:var(--display);font-weight:800;font-size:1.3rem;line-height:1.2}
+.chat{display:grid;gap:8px;text-align:left;max-width:520px;margin:0 auto 6px}
+.bub{padding:10px 14px;border-radius:18px;font-weight:800;font-size:1.1rem;max-width:85%;line-height:1.3}
+.bub.them{background:var(--paper);border:2px solid var(--edge);border-bottom-left-radius:4px;justify-self:start}
+.bub.me{background:var(--sky);color:#fff;border-bottom-right-radius:4px;justify-self:end;letter-spacing:3px}
+.opts.long{grid-template-columns:1fr}
+.opts.long .opt{font-size:1.08rem;text-align:left;padding:12px 14px 12px 28px}
+.lvtag{display:inline-block;font-size:.72rem;font-weight:800;padding:1px 9px;border-radius:999px;background:var(--c);color:#fff;vertical-align:middle;margin-left:6px;font-family:var(--body);letter-spacing:.02em}
+.medal{font-size:1.1rem;margin-left:4px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;margin-bottom:14px;scrollbar-width:thin}
+.chip{--c:var(--sky);flex:none;display:inline-flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--c);border-radius:999px;padding:5px 12px;font-weight:800;cursor:pointer;white-space:nowrap;font-size:.9rem}
+.chip.full{background:var(--c);color:#fff}
+.dlg{background:var(--card);border:2px solid var(--edge);border-radius:16px;padding:10px 14px;display:grid;gap:6px;cursor:pointer;text-align:left}
+.dlg .bub{font-size:1rem}
+.dlg .bub.me{letter-spacing:0}
+
+/* match (unir con flechas) */
+.match{position:relative;display:grid;grid-template-columns:1fr 1fr;column-gap:clamp(56px,16vw,140px);margin-bottom:10px;user-select:none;-webkit-user-select:none}
+.mcol{display:grid;gap:10px;align-content:start}
+.mitem{touch-action:none;position:relative;background:var(--card);border:3px solid var(--edge);border-radius:16px;padding:8px 10px;min-height:66px;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--display);font-weight:700;font-size:1.08rem;line-height:1.15;cursor:grab;box-shadow:0 4px 0 var(--edge);overflow-wrap:anywhere}
+.mitem.vis{font-size:2.6rem}
+.mitem .dot{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--edge);border:3px solid var(--card);top:50%;transform:translateY(-50%)}
+.mL .dot{right:-11px}.mR .dot{left:-11px}
+.mitem.sel{border-color:var(--sky);box-shadow:0 4px 0 var(--sky-deep)}
+.mitem.sel .dot{background:var(--sky)}
+.mitem.done{border-color:var(--leaf);background:var(--good-bg);box-shadow:0 4px 0 var(--leaf);cursor:default}
+.mitem.done .dot{background:var(--leaf)}
+.mitem.bad{animation:shake .35s;border-color:var(--tomato)}
+.match svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 
 /* result */
-.result{text-align:center;display:grid;gap:14px;justify-items:center;padding-top:10px}
-.result h2{font-size:2.4rem}
+.result{text-align:center;display:grid;gap:12px;justify-items:center;padding-top:6px}
+.result h2{font-size:2.3rem}
 .bigstars{font-size:3.4rem;letter-spacing:6px;color:var(--star)}
 .bigstars .off{color:var(--star-off)}
+.bigstars span{display:inline-block}
+.bigstars .in{animation:starIn .5s both}
+.rewards{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.rewards .pill{font-size:1.1rem;padding:6px 14px}
+.sticker{display:grid;justify-items:center;gap:4px;padding:14px 22px;border:3px dashed var(--gold);border-radius:22px;background:var(--card);animation:stickerIn .7s both}
+.sticker .e{font-size:4rem;line-height:1}
 .result .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+/* album, shop */
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:22px}
+.stk{background:var(--card);border:3px solid var(--edge);border-radius:18px;padding:10px 6px;text-align:center;display:grid;justify-items:center;gap:2px;cursor:pointer}
+.stk .e{font-size:2.6rem;line-height:1.2}
+.stk small{font-weight:800;line-height:1.15}
+.stk.lock .e{filter:grayscale(1) brightness(.2);opacity:.35}
+.stk.lock small{color:var(--muted)}
+.stk.gold{border-color:var(--gold);background:linear-gradient(160deg,var(--card),rgba(245,179,1,.22));box-shadow:0 0 0 3px rgba(245,179,1,.25)}
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:20px}
+.av{background:var(--card);border:3px solid var(--edge);border-radius:18px;padding:10px;cursor:pointer;display:grid;justify-items:center;gap:2px;font-weight:800}
+.av .e{font-size:2.8rem;line-height:1.2}
+.av.on{border-color:var(--leaf);background:var(--good-bg)}
+.av.cant{opacity:.55}
+.namerow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.namerow input{flex:1;min-width:160px;font:inherit;font-weight:800;padding:10px 14px;border-radius:14px;border:2px solid var(--edge);background:var(--card);color:var(--ink)}
+
+/* memo */
+.memo{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:560px;margin:0 auto 16px}
+.mc{aspect-ratio:1;perspective:600px;border:0;background:none;padding:0;cursor:pointer}
+.mc .in{position:relative;width:100%;height:100%;transition:transform .4s;transform-style:preserve-3d}
+.mc.flip .in,.mc.got .in{transform:rotateY(180deg)}
+.mc .f,.mc .b{position:absolute;inset:0;border-radius:16px;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:3px solid var(--edge)}
+.mc .f{background:var(--grape);border-color:var(--grape-deep);color:#fff;font-size:2rem;font-family:var(--display);font-weight:800}
+.mc .b{background:var(--card);transform:rotateY(180deg);font-family:var(--display);font-weight:800;font-size:clamp(.85rem,3.6vw,1.2rem);padding:4px;overflow-wrap:anywhere;line-height:1.1}
+.mc .b.vis{font-size:clamp(1.8rem,9vw,2.8rem)}
+.mc.got .b{border-color:var(--leaf);background:var(--good-bg)}
+
+/* victory */
+.cert{background:var(--card);border:6px double var(--gold);border-radius:24px;padding:26px 20px;text-align:center;display:grid;gap:8px;justify-items:center;max-width:640px;margin:0 auto 18px}
+.cert .big{font-size:5rem;line-height:1;animation:bob 2s ease-in-out infinite}
+.cert h2{font-size:2.2rem}
+.cert .who{font-family:var(--display);font-weight:800;font-size:2rem;color:var(--sky);border-bottom:3px solid var(--edge);padding:0 20px}
+.cert p{margin:0;font-weight:700}
+
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:800;box-shadow:0 6px 20px rgba(0,0,0,.25);animation:toastIn .3s both;max-width:calc(100% - 32px);text-align:center}
+.floaty{position:fixed;z-index:25;pointer-events:none;font-family:var(--display);font-weight:800;font-size:1.6rem;color:var(--leaf);animation:floatUp 1s ease-out forwards;text-shadow:0 2px 0 var(--card)}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:20;width:100%;height:100%}
 
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes glow{0%,100%{box-shadow:0 5px 0 var(--c),0 0 0 0 rgba(255,191,31,.0)}50%{box-shadow:0 5px 0 var(--c),0 0 0 8px rgba(255,191,31,.35)}}
+@keyframes starIn{0%{transform:scale(0) rotate(-90deg)}70%{transform:scale(1.3) rotate(10deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes stickerIn{0%{transform:scale(0) rotate(-20deg);opacity:0}60%{transform:scale(1.15) rotate(6deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes floatUp{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-70px) scale(1.3)}}
 .pop{animation:pop .35s ease-out}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:440px){.brand{font-size:0}}
 @media (max-width:640px){
-  .map::before{left:37px}
-  .stop:nth-child(n){justify-self:stretch;width:100%}
   .opts{gap:10px}
-  .opt{font-size:1.1rem;padding:12px 8px}
+  .opt{font-size:1.05rem;padding:12px 8px}
+  .opt.picopt{font-size:2.5rem;min-height:84px}
+  .mitem{font-size:.95rem;min-height:58px;padding:6px}
+  .mitem.vis{font-size:2.1rem}
+  .mods{grid-template-columns:repeat(2,1fr)}
+}
+@media print{
+  body{background:#fff;padding:0}
+  .topbar,#confetti,.noprint,section:not(#scr-win){display:none!important}
+  .cert{border-color:#c90}
 }
 </style>
 </head>
 <body>
-
 <div class="app">
   <header class="topbar">
-    <button class="iconbtn" id="backBtn" hidden aria-label="Volver">← Volver</button>
+    <button class="iconbtn" id="backBtn" hidden aria-label="Volver">←</button>
     <div class="brand">Aventura <b>English</b></div>
-    <span class="pill" title="Estrellas ganadas"><span class="s">★</span><span id="totalStars">0</span></span>
+    <span class="pill" title="Racha de días seguidos">🔥<span id="tStreak">0</span></span>
+    <span class="pill" id="coinPill" title="Monedas">🪙<span id="tCoins">0</span></span>
+    <span class="pill" id="starPill" title="Estrellas"><span class="s">★</span><span id="tStars">0</span></span>
     <button class="iconbtn" id="soundBtn" aria-pressed="true" title="Sonido y voz">🔊</button>
   </header>
 
   <!-- HOME -->
   <section id="scr-home">
     <div class="hero">
-      <svg class="mascot" viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="55" r="38" fill="var(--sun)"/>
-        <path d="M24 22 L50 11 L76 22 L50 33 Z" fill="var(--ink)"/>
-        <path d="M70 24 L72 40" stroke="var(--tomato)" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="72" cy="42" r="3.5" fill="var(--tomato)"/>
-        <circle cx="38" cy="52" r="5.5" fill="var(--ink)"/><circle cx="62" cy="52" r="5.5" fill="var(--ink)"/>
+      <svg class="mascot bob" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="55" r="38" style="fill:var(--sun)"/>
+        <path d="M24 22 L50 11 L76 22 L50 33 Z" style="fill:var(--ink)"/>
+        <path d="M70 24 L72 40" style="stroke:var(--tomato)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="42" r="3.5" style="fill:var(--tomato)"/>
+        <circle cx="38" cy="52" r="5.5" style="fill:var(--ink)"/><circle cx="62" cy="52" r="5.5" style="fill:var(--ink)"/>
         <circle cx="40" cy="50" r="1.8" fill="#fff"/><circle cx="64" cy="50" r="1.8" fill="#fff"/>
-        <circle cx="29" cy="64" r="5" fill="var(--tomato)" opacity=".35"/><circle cx="71" cy="64" r="5" fill="var(--tomato)" opacity=".35"/>
-        <path class="mouth" d="M40 66 Q50 76 60 66" stroke="var(--ink)" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="29" cy="64" r="5" style="fill:var(--tomato)" opacity=".35"/><circle cx="71" cy="64" r="5" style="fill:var(--tomato)" opacity=".35"/>
+        <path d="M40 66 Q50 77 60 66" style="stroke:var(--ink)" stroke-width="4" fill="none" stroke-linecap="round"/>
       </svg>
       <div class="hero-text">
         <h1>Aventura <span>English</span></h1>
-        <div class="bubble" id="homeBubble">Hi! Soy Pipo. Elegí un nivel, aprendé las palabras y ganá estrellas.</div>
+        <div class="bubble" id="homeBubble"></div>
       </div>
     </div>
-    <div class="map" id="map"></div>
-    <div class="tools">
-      <label class="switch"><input type="checkbox" id="teacher"> Modo profe: todos los niveles abiertos</label>
-      <span id="resetWrap"><button class="linkbtn" id="resetBtn">Borrar progreso</button></span>
-    </div>
-  </section>
 
-  <!-- LEVEL -->
-  <section id="scr-level" hidden>
-    <div class="lvl-head"><div class="num" id="lvlNum">1</div><div><h2 id="lvlName"></h2><p id="lvlSub"></p></div></div>
-    <div class="topics" id="topics"></div>
+    <div class="panel player">
+      <button class="avatar" id="avBig" title="Cambiar personaje"></button>
+      <div class="info">
+        <div class="nm" id="pName"></div>
+        <div class="ttl" id="pTitle"></div>
+        <div class="xpbar"><i id="pXp"></i></div>
+      </div>
+      <div class="acts">
+        <button class="btn small grape" id="goShop">🛍️ Tienda</button>
+        <button class="btn small sun" id="goAlbum">📒 Álbum</button>
+      </div>
+    </div>
+
+    <div class="panel cup" id="cupCard">
+      <div class="trophy">🏆</div>
+      <div class="ci">
+        <h2 id="cupTitle">La Gran Copa del Inglés</h2>
+        <p id="cupText"></p>
+        <div class="bigbar"><i id="cupBar"></i><span id="cupNum"></span></div>
+      </div>
+      <button class="btn sun" id="cupBtn" hidden>🏆 Ver mi diploma</button>
+    </div>
+
+    <div class="arcade">
+      <button class="arc" id="chestBtn" style="--c:var(--sun-deep)"><span class="e">🎁</span><b>Cofre diario</b><small id="chestTxt">¡Abrilo!</small></button>
+      <button class="arc" id="blitzBtn" style="--c:var(--tomato)"><span class="e">⚡</span><b>Relámpago</b><small id="blitzTxt">60 segundos</small></button>
+      <button class="arc" id="memoBtn" style="--c:var(--grape)"><span class="e">🧠</span><b>Memotest</b><small id="memoTxt">Encontrá los pares</small></button>
+      <button class="arc" id="luckyBtn" style="--c:var(--leaf)"><span class="e">🎲</span><b>Sorpresa</b><small>Un módulo al azar</small></button>
+    </div>
+
+    <div id="worlds"></div>
+    <div class="tools"><span id="resetWrap"><button class="linkbtn" id="resetBtn">Borrar progreso</button></span></div>
   </section>
 
   <!-- LEARN -->
   <section id="scr-learn" hidden>
-    <div class="lvl-head"><div class="num" id="learnIc" style="font-size:1.8rem"></div><div><h2 id="learnName"></h2><p>Tocá cada tarjeta para escucharla.</p></div></div>
+    <div class="lhead" id="learnHead"></div>
     <div id="learnTip"></div>
     <div id="learnList"></div>
-    <div class="center"><button class="btn leaf" id="learnPlay">¡A jugar! ▶</button></div>
+    <div class="center"><button class="btn leaf" id="learnPlay2">¡A jugar! ▶</button></div>
   </section>
 
   <!-- PLAY -->
@@ -222,6 +387,7 @@ h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
       <span class="hearts" id="hearts"></span>
       <span class="pill"><span id="score">0</span> pts</span>
     </div>
+    <div class="combo" id="combo"></div>
     <div class="qcard" id="qcard"></div>
     <div id="answers"></div>
     <div class="feedback" id="feedback" hidden>
@@ -232,25 +398,55 @@ h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
 
   <!-- RESULT -->
   <section id="scr-result" hidden>
-    <div class="result">
-      <svg class="mascot" viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="55" r="38" fill="var(--sun)"/>
-        <path d="M24 22 L50 11 L76 22 L50 33 Z" fill="var(--ink)"/>
-        <path d="M70 24 L72 40" stroke="var(--tomato)" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="72" cy="42" r="3.5" fill="var(--tomato)"/>
-        <circle cx="38" cy="52" r="5.5" fill="var(--ink)"/><circle cx="62" cy="52" r="5.5" fill="var(--ink)"/>
-        <circle cx="40" cy="50" r="1.8" fill="#fff"/><circle cx="64" cy="50" r="1.8" fill="#fff"/>
-        <circle cx="29" cy="64" r="5" fill="var(--tomato)" opacity=".35"/><circle cx="71" cy="64" r="5" fill="var(--tomato)" opacity=".35"/>
-        <path class="mouth" id="resMouth" d="M40 66 Q50 76 60 66" stroke="var(--ink)" stroke-width="4" fill="none" stroke-linecap="round"/>
-      </svg>
-      <h2 id="resTitle"></h2>
-      <div class="bigstars" id="resStars"></div>
-      <p id="resText" style="font-weight:700;margin:0"></p>
-      <div class="row">
-        <button class="btn sun" id="resRetry">Jugar otra vez</button>
-        <button class="btn ghost" id="resBack">Elegir otro tema</button>
-      </div>
+    <div class="result" id="resBox"></div>
+  </section>
+
+  <!-- BLITZ -->
+  <section id="scr-blitz" hidden>
+    <div class="hud">
+      <div class="bar"><i id="bzBar" style="background:var(--tomato)"></i></div>
+      <span class="pill">⏱️ <span id="bzTime">60</span></span>
+      <span class="pill">✔️ <span id="bzScore">0</span></span>
     </div>
+    <div class="combo" id="bzCombo"></div>
+    <div class="qcard" id="bzCard"></div>
+    <div id="bzAns"></div>
+  </section>
+
+  <!-- MEMO -->
+  <section id="scr-memo" hidden>
+    <div class="lhead"><div class="ic" style="--c:var(--grape);--d:var(--grape-deep)">🧠</div><div class="tx"><h2>Memotest</h2><p id="memoSub">Uní cada imagen con su palabra en inglés.</p></div><span class="pill">Jugadas: <span id="memoMoves">0</span></span></div>
+    <div class="memo" id="memoGrid"></div>
+  </section>
+
+  <!-- SHOP -->
+  <section id="scr-shop" hidden>
+    <div class="lhead"><div class="ic" style="--c:var(--grape);--d:var(--grape-deep)">🛍️</div><div class="tx"><h2>Tienda de personajes</h2><p>Ganá monedas jugando y desbloqueá personajes.</p></div></div>
+    <div class="namerow"><label for="nameIn" style="font-weight:800">Tu nombre:</label><input id="nameIn" maxlength="24" placeholder="Escribí tu nombre"><button class="btn small leaf" id="nameSave">Guardar</button></div>
+    <div class="shop" id="shopGrid"></div>
+  </section>
+
+  <!-- ALBUM -->
+  <section id="scr-album" hidden>
+    <div class="lhead"><div class="ic" style="--c:var(--sun);--d:var(--sun-deep)">📒</div><div class="tx"><h2>Álbum de figuritas</h2><p id="albumSub"></p></div></div>
+    <div id="albumBody"></div>
+  </section>
+
+  <!-- WIN -->
+  <section id="scr-win" hidden>
+    <div class="cert">
+      <div class="big">🏆</div>
+      <h2>¡Campeón/a del Inglés!</h2>
+      <p>Este diploma certifica que</p>
+      <div class="who" id="winName"></div>
+      <p id="winText"></p>
+      <p style="color:var(--muted)" id="winDate"></p>
+    </div>
+    <div class="center noprint" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn sun" id="winPrint">🖨️ Imprimir diploma</button>
+      <button class="btn ghost" id="winHome">Seguir jugando</button>
+    </div>
+    <p class="center noprint" style="color:var(--muted);font-weight:700">Podés seguir buscando las 3 estrellas en cada módulo para tener todas las figuritas doradas.</p>
   </section>
 </div>
 <canvas id="confetti"></canvas>
@@ -258,159 +454,422 @@ h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
 <script>
 (function(){
 "use strict";
-/* ============ DATA ============ */
-const COLORS = ["sky","leaf","sun","grape","tomato"];
-const DAYS = [["Monday","lunes"],["Tuesday","martes"],["Wednesday","miércoles"],["Thursday","jueves"],["Friday","viernes"],["Saturday","sábado"],["Sunday","domingo"]];
-const MONTHS = [["January","enero"],["February","febrero"],["March","marzo"],["April","abril"],["May","mayo"],["June","junio"],["July","julio"],["August","agosto"],["September","septiembre"],["October","octubre"],["November","noviembre"],["December","diciembre"]];
-const SEASON_AR = ["summer","summer","autumn","autumn","autumn","winter","winter","winter","spring","spring","spring","summer"];
-const ph = a => a.map(([en,es])=>({en,es}));
-
-const LEVELS = [
-{ name:"Palabras", sub:"Días, meses, estaciones, cuerpo, colores y cosas", topics:[
-  {id:"days", name:"Días de la semana", ic:"📅", kind:"vocab", items:DAYS.map(([en,es])=>({en,es})),
-   extra(){ return DAYS.map((d,i)=>({key:"after"+i, type:"choice", hint:"¿Qué día viene después?", big:"What day comes after "+d[0]+"?", sub:"¿Qué día viene después del "+d[1]+"?", answer:DAYS[(i+1)%7][0], options:pick(DAYS[(i+1)%7][0], DAYS.map(x=>x[0])), say:"After "+d[0]+" comes "+DAYS[(i+1)%7][0]})); }},
-  {id:"months", name:"Meses del año", ic:"🗓️", kind:"vocab", items:MONTHS.map(([en,es])=>({en,es})),
-   extra(){ return MONTHS.map((m,i)=>({key:"afterm"+i, type:"choice", hint:"¿Qué mes viene después?", big:"What month comes after "+m[0]+"?", sub:"¿Qué mes viene después de "+m[1]+"?", answer:MONTHS[(i+1)%12][0], options:pick(MONTHS[(i+1)%12][0], MONTHS.map(x=>x[0])), say:"After "+m[0]+" comes "+MONTHS[(i+1)%12][0]})); }},
-  {id:"seasons", name:"Estaciones", ic:"🍂", kind:"vocab", items:[{en:"spring",es:"primavera",v:"🌸"},{en:"summer",es:"verano",v:"☀️"},{en:"autumn",es:"otoño",v:"🍂"},{en:"winter",es:"invierno",v:"⛄"}],
-   tip:"En Argentina las estaciones son al revés que en Estados Unidos o Inglaterra: ¡acá diciembre es <b>summer</b>!",
-   extra(){ const s=["spring","summer","autumn","winter"];
-     const q=MONTHS.map((m,i)=>({key:"ar"+i, type:"choice", hint:"Estaciones en Argentina", big:"In Argentina, "+m[0]+" is in…", sub:"En Argentina, "+m[1]+" es en…", answer:SEASON_AR[i], options:shuffle(s.slice()), say:"In Argentina, "+m[0]+" is in "+SEASON_AR[i]}));
-     [["It's hot. We go to the pool.","Hace calor. Vamos a la pileta.","summer"],["It's cold and it snows.","Hace frío y nieva.","winter"],["The flowers grow.","Crecen las flores.","spring"],["The leaves fall.","Se caen las hojas.","autumn"]]
-       .forEach((x,i)=>q.push({key:"clue"+i,type:"choice",hint:"¿Qué estación es?",big:x[0],sub:x[1],answer:x[2],options:shuffle(s.slice()),say:x[0]+" It's "+x[2]}));
-     return q; }},
-  {id:"body", name:"Partes del cuerpo", ic:"🖐️", kind:"vocab", items:[{en:"eyes",es:"ojos",v:"👀"},{en:"ears",es:"orejas",v:"👂"},{en:"nose",es:"nariz",v:"👃"},{en:"mouth",es:"boca",v:"👄"},{en:"hands",es:"manos",v:"✋"},{en:"feet",es:"pies",v:"🦶"},{en:"legs",es:"piernas",v:"🦵"},{en:"arms",es:"brazos",v:"💪"},{en:"teeth",es:"dientes",v:"🦷"},{en:"tongue",es:"lengua",v:"👅"}],
-   extra(){ const all=["eyes","ears","nose","mouth","hands","feet","legs","teeth"];
-     return [["I see with my…","Veo con mis…","eyes"],["I hear with my…","Escucho con mis…","ears"],["I smell with my…","Huelo con mi…","nose"],["I eat with my…","Como con mi…","mouth"],["I write with my…","Escribo con mis…","hands"],["I walk with my…","Camino con mis…","feet"],["I brush my…","Me cepillo los…","teeth"]]
-       .map((x,i)=>({key:"use"+i,type:"choice",hint:"Completá",big:x[0],sub:x[1],answer:x[2],options:pick(x[2],all),say:x[0].replace("…"," "+x[2])})); }},
-  {id:"colors", name:"Colores", ic:"🎨", kind:"vocab", items:[{en:"red",es:"rojo",c:"#e53935"},{en:"blue",es:"azul",c:"#1e6fe0"},{en:"yellow",es:"amarillo",c:"#fdd835"},{en:"green",es:"verde",c:"#2e9e4f"},{en:"orange",es:"naranja",c:"#fb8c00"},{en:"purple",es:"violeta",c:"#7e3fbf"},{en:"pink",es:"rosa",c:"#f06292"},{en:"black",es:"negro",c:"#1a1a1a"},{en:"white",es:"blanco",c:"#ffffff"},{en:"brown",es:"marrón",c:"#7b4a26"},{en:"gray",es:"gris",c:"#9e9e9e"}],
-   extra(){ const all=["red","blue","yellow","green","orange","purple","pink","white","gray"];
-     const q=[["red","yellow","orange"],["blue","yellow","green"],["red","blue","purple"],["red","white","pink"],["black","white","gray"]].map((m,i)=>({key:"mix"+i,type:"choice",hint:"Mezclá los colores",big:m[0]+" + "+m[1]+" = ?",answer:m[2],options:pick(m[2],all),say:m[0]+" and "+m[1]+" make "+m[2]}));
-     [["The sky is…","El cielo es…","blue"],["Grass is…","El pasto es…","green"],["A banana is…","Una banana es…","yellow"],["Snow is…","La nieve es…","white"]].forEach((x,i)=>q.push({key:"is"+i,type:"choice",hint:"Completá",big:x[0],sub:x[1],answer:x[2],options:pick(x[2],all),say:x[0].replace("…"," "+x[2])}));
-     return q; }},
-  {id:"things", name:"Cosas", ic:"🎒", kind:"vocab", items:[{en:"pencil",es:"lápiz",v:"✏️"},{en:"book",es:"libro",v:"📕"},{en:"backpack",es:"mochila",v:"🎒"},{en:"chair",es:"silla",v:"🪑"},{en:"ball",es:"pelota",v:"⚽"},{en:"clock",es:"reloj",v:"⏰"},{en:"bed",es:"cama",v:"🛏️"},{en:"door",es:"puerta",v:"🚪"},{en:"computer",es:"computadora",v:"💻"},{en:"scissors",es:"tijera",v:"✂️"},{en:"apple",es:"manzana",v:"🍎"},{en:"dog",es:"perro",v:"🐶"},{en:"cat",es:"gato",v:"🐱"},{en:"house",es:"casa",v:"🏠"}]}
-]},
-{ name:"Frases del día", sub:"Frases simples para todos los días", topics:[
-  {id:"greet", name:"Saludos", ic:"👋", kind:"phrases", items:ph([["Hello!","¡Hola!"],["Good morning!","¡Buen día!"],["Good night!","¡Buenas noches!"],["How are you?","¿Cómo estás?"],["I'm fine, thank you.","Estoy bien, gracias."],["What's your name?","¿Cómo te llamás?"],["My name is Ana.","Me llamo Ana."],["Nice to meet you.","Mucho gusto."],["See you later!","¡Hasta luego!"],["Goodbye!","¡Chau!"]])},
-  {id:"school", name:"En la escuela", ic:"🏫", kind:"phrases", items:ph([["Can I go to the bathroom?","¿Puedo ir al baño?"],["Open your book.","Abrí tu libro."],["Sit down, please.","Sentate, por favor."],["I don't understand.","No entiendo."],["Can you repeat, please?","¿Podés repetir, por favor?"],["Raise your hand.","Levantá la mano."],["Let's play!","¡Juguemos!"],["I finished!","¡Terminé!"]])},
-  {id:"me", name:"Cómo estoy y qué me gusta", ic:"😋", kind:"phrases", items:ph([["I'm hungry.","Tengo hambre."],["I'm thirsty.","Tengo sed."],["I'm tired.","Estoy cansado."],["I'm happy.","Estoy feliz."],["I like pizza.","Me gusta la pizza."],["I don't like soup.","No me gusta la sopa."],["I have a dog.","Tengo un perro."],["I'm ten years old.","Tengo diez años."]])}
-]},
-{ name:"Presente", sub:"Lo que hacés siempre y lo que pasa ahora", topics:[
-  {id:"psimple", name:"Presente simple", ic:"🔁", kind:"grammar", tip:"<b>Presente simple</b> = cosas que hacés siempre o seguido. Con <b>he / she / it</b> se agrega -s o -es: I play → she plays, he watches.",
-   blanks:[["She ___ soccer every day.","plays",["play","playing"],"Ella juega al fútbol todos los días."],["I ___ milk in the morning.","drink",["drinks","drinking"],"Tomo leche a la mañana."],["My dad ___ in a hospital.","works",["work","working"],"Mi papá trabaja en un hospital."],["They ___ to school by bus.","go",["goes","going"],"Ellos van a la escuela en colectivo."],["He ___ TV after dinner.","watches",["watch","watchs"],"Él mira tele después de cenar."],["We ___ English on Mondays.","have",["has","having"],"Tenemos inglés los lunes."],["The cat ___ fish.","likes",["like","liking"],"Al gato le gusta el pescado."],["Does she ___ pizza?","like",["likes","liking"],"¿A ella le gusta la pizza?"],["I don't ___ coffee.","drink",["drinks","drinking"],"No tomo café."],["Tom ___ not play tennis.","does",["do","is"],"Tom no juega al tenis."]]},
-  {id:"myday", name:"Mi día", ic:"⏰", kind:"phrases", tip:"Para contar tu rutina usás el <b>presente simple</b>.", items:ph([["I wake up at seven.","Me despierto a las siete."],["I get dressed.","Me visto."],["I have breakfast.","Desayuno."],["I brush my teeth.","Me cepillo los dientes."],["I go to school.","Voy a la escuela."],["I do my homework.","Hago la tarea."],["I play with my friends.","Juego con mis amigos."],["I go to bed at ten.","Me voy a dormir a las diez."]])},
-  {id:"pcont", name:"Presente continuo", ic:"🏃", kind:"grammar", tip:"<b>Presente continuo</b> = lo que está pasando ahora. <b>am / is / are</b> + verbo con <b>-ing</b>: I am eating, she is running.",
-   blanks:[["I am ___ a book.","reading",["read","reads"],"Estoy leyendo un libro."],["She is ___ with her friends.","playing",["play","plays"],"Ella está jugando con sus amigos."],["They ___ running in the park.","are",["is","am"],"Ellos están corriendo en el parque."],["The baby ___ sleeping.","is",["are","am"],"El bebé está durmiendo."],["We are ___ lunch.","eating",["eat","eats"],"Estamos almorzando."],["Look! It ___ raining.","is",["are","am"],"¡Mirá! Está lloviendo."],["What are you ___?","doing",["do","does"],"¿Qué estás haciendo?"],["I ___ drawing a picture.","am",["is","are"],"Estoy haciendo un dibujo."]]}
-]},
-{ name:"Futuro y condicionales", sub:"Will, going to y frases con if", topics:[
-  {id:"will", name:"Futuro con will", ic:"🔮", kind:"grammar", tip:"<b>will</b> + verbo = predicciones, promesas y decisiones del momento: I will help you. Negativo: <b>won't</b>.",
-   blanks:[["Tomorrow it ___ rain.","will",["is","does"],"Mañana va a llover."],["I think I ___ be a doctor.","will",["am","do"],"Creo que voy a ser doctor."],["Don't worry, I ___ help you!","will",["am","was"],"¡Tranqui, te voy a ayudar!"],["She won't ___ late.","be",["is","being"],"Ella no va a llegar tarde."],["Will you come to my party? Yes, I ___.","will",["do","am"],"¿Vas a venir a mi cumple? Sí."],["We will ___ the game!","win",["wins","winning"],"¡Vamos a ganar el partido!"]]},
-  {id:"goingto", name:"Futuro con going to", ic:"🧳", kind:"grammar", tip:"<b>am / is / are + going to</b> + verbo = planes que ya decidiste: I am going to visit my grandma.",
-   blanks:[["I am ___ to visit my grandma.","going",["go","goes"],"Voy a visitar a mi abuela."],["Look at the clouds! It is going to ___.","rain",["rains","raining"],"¡Mirá las nubes! Va a llover."],["We ___ going to play football.","are",["is","am"],"Vamos a jugar al fútbol."],["He is going to ___ a cake.","make",["makes","making"],"Él va a hacer una torta."],["Are you going ___ watch the movie?","to",["for","at"],"¿Vas a ver la película?"],["She ___ going to swim.","is",["are","am"],"Ella va a nadar."]]},
-  {id:"cond", name:"Condicionales (if)", ic:"🔀", kind:"grammar", tip:"<b>If</b> + presente, <b>will</b> + verbo: If it rains, I will stay home. Para cosas que siempre pasan: If you heat ice, it melts.",
-   blanks:[["If it rains, I ___ stay home.","will",["am","did"],"Si llueve, me voy a quedar en casa."],["If you heat ice, it ___.","melts",["melt","melting"],"Si calentás hielo, se derrite."],["If you study, you ___ pass the test.","will",["are","do"],"Si estudiás, vas a aprobar la prueba."],["If I ___ time, I will call you.","have",["will have","had"],"Si tengo tiempo, te llamo."],["If she is hungry, she ___ eat a sandwich.","will",["is","does"],"Si tiene hambre, va a comer un sándwich."],["If you mix red and yellow, you ___ orange.","get",["gets","getting"],"Si mezclás rojo y amarillo, obtenés naranja."],["If I had wings, I ___ fly.","would",["will","am"],"Si tuviera alas, volaría."]]}
-]},
-{ name:"Pasado", sub:"Lo que ya pasó", topics:[
-  {id:"waswere", name:"Was / were", ic:"🕰️", kind:"grammar", tip:"<b>was</b> con I / he / she / it. <b>were</b> con you / we / they.",
-   blanks:[["Yesterday I ___ at the park.","was",["were","am"],"Ayer estuve en el parque."],["They ___ very happy.","were",["was","is"],"Ellos estaban muy felices."],["It ___ cold last night.","was",["were","is"],"Anoche hizo frío."],["We ___ at school.","were",["was","are"],"Estábamos en la escuela."],["___ you at home?","Were",["Was","Is"],"¿Estabas en tu casa?"],["My dog ___ in the garden.","was",["were","are"],"Mi perro estaba en el jardín."]]},
-  {id:"regular", name:"Verbos regulares", ic:"✅", kind:"grammar", tip:"Verbos <b>regulares</b>: se agrega <b>-ed</b>. play → played, watch → watched, visit → visited.",
-   blanks:[["I ___ football yesterday.","played",["play","playing"],"Ayer jugué al fútbol."],["She ___ her room.","cleaned",["clean","cleaning"],"Ella limpió su cuarto."],["We ___ a movie last night.","watched",["watch","watching"],"Anoche vimos una película."],["He ___ to music.","listened",["listen","listens"],"Él escuchó música."],["They ___ in the pool.","jumped",["jump","jumping"],"Ellos saltaron en la pileta."],["I ___ my grandma on Sunday.","visited",["visit","visiting"],"El domingo visité a mi abuela."],["The class ___ at nine.","started",["start","starting"],"La clase empezó a las nueve."]]},
-  {id:"irregular", name:"Verbos irregulares", ic:"⚡", kind:"grammar", tip:"Los <b>irregulares</b> cambian: go → went, eat → ate, see → saw, have → had, run → ran, swim → swam, buy → bought. ¡Hay que aprenderlos!",
-   blanks:[["Last summer we ___ to the beach.","went",["goed","go"],"El verano pasado fuimos a la playa."],["I ___ a big ice cream.","ate",["eated","eat"],"Me comí un helado grande."],["She ___ a rainbow.","saw",["seed","see"],"Ella vio un arcoíris."],["We ___ a lot of fun.","had",["haved","have"],"Nos divertimos mucho."],["He ___ very fast.","ran",["runned","run"],"Él corrió muy rápido."],["They ___ in the river.","swam",["swimmed","swim"],"Ellos nadaron en el río."],["Mom ___ a new bike for me.","bought",["buyed","buy"],"Mamá me compró una bici nueva."],["I ___ a sandcastle.","made",["maked","make"],"Hice un castillo de arena."]]}
-]}
-];
-LEVELS.forEach((L,i)=>{L.n=i+1;L.color=COLORS[i];});
-
-/* ============ HELPERS ============ */
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function pick(ans, pool, n){n=n||4;const others=shuffle(pool.filter(x=>x!==ans)).slice(0,n-1);return shuffle([ans,...others]);}
+/* =================== HELPERS =================== */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pick(ans,pool,n){n=n||4;const others=shuffle([...new Set(pool)].filter(x=>x!==ans)).slice(0,n-1);return shuffle([ans,...others]);}
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const V=(en,es,v)=>({en,es,v});
 
-/* ============ STORAGE ============ */
-const KEY="aventura-english-v1";
-let prog={stars:{},teacher:false};
-try{const s=localStorage.getItem(KEY);if(s)prog=Object.assign(prog,JSON.parse(s));}catch(e){}
+/* =================== VISUALS (imágenes) =================== */
+function clockSVG(h,m){
+  const ha=(h%12)*30+m*.5, ma=m*6;let t="";
+  for(let i=0;i<12;i++)t+='<line x1="50" y1="9" x2="50" y2="'+(i%3===0?17:13)+'" transform="rotate('+(i*30)+' 50 50)" style="stroke:var(--muted);stroke-width:'+(i%3===0?3:2)+';stroke-linecap:round"/>';
+  const n=(x,y,s)=>'<text x="'+x+'" y="'+y+'" text-anchor="middle" style="fill:var(--ink);font:800 12px Nunito,sans-serif">'+s+'</text>';
+  return '<svg class="clock" viewBox="0 0 100 100" role="img" aria-label="'+h+':'+String(m).padStart(2,"0")+'"><circle cx="50" cy="50" r="45" style="fill:var(--card);stroke:var(--ink);stroke-width:4"/>'+t+n(50,30,12)+n(74,54,3)+n(50,79,6)+n(26,54,9)+
+  '<line x1="50" y1="50" x2="50" y2="31" transform="rotate('+ha+' 50 50)" style="stroke:var(--ink);stroke-width:6;stroke-linecap:round"/><line x1="50" y1="50" x2="50" y2="19" transform="rotate('+ma+' 50 50)" style="stroke:var(--tomato);stroke-width:4;stroke-linecap:round"/><circle cx="50" cy="50" r="4" style="fill:var(--ink)"/></svg>';
+}
+const SC={
+  "in":'<span class="o cat" style="left:50%;top:33%;z-index:1">🐱</span><span class="o box" style="left:50%;top:44%;z-index:2">📦</span>',
+  "on":'<span class="o box" style="left:50%;top:50%">📦</span><span class="o cat" style="left:50%;top:18%">🐱</span>',
+  "under":'<span class="tbl" style="left:50%;top:22%"></span><span class="o cat" style="left:50%;top:52%">🐱</span>',
+  "next to":'<span class="o box" style="left:34%;top:50%">📦</span><span class="o cat" style="left:72%;top:58%">🐱</span>',
+  "behind":'<span class="o cat" style="left:66%;top:20%;z-index:1">🐱</span><span class="o tree" style="left:46%;top:8%;z-index:2">🌳</span>',
+  "in front of":'<span class="o tree" style="left:50%;top:4%;z-index:1">🌳</span><span class="o cat" style="left:50%;top:56%;z-index:2">🐱</span>',
+  "between":'<span class="o box" style="left:20%;top:50%">📦</span><span class="o cat" style="left:50%;top:58%">🐱</span><span class="o box" style="left:80%;top:50%">📦</span>'
+};
+function visHTML(it){
+  if(!it)return"";
+  if(it.c)return '<span class="swatch" style="background:'+it.c+'"></span>';
+  if(it.clock)return clockSVG(it.clock[0],it.clock[1]);
+  if(it.scene)return '<span class="scene" role="img" aria-label="'+esc(it.scene)+'">'+SC[it.scene]+'</span>';
+  if(it.pct!=null)return '<span class="pctv"><span class="pb"><i style="width:'+it.pct+'%"></i></span><b>'+it.pct+'%</b></span>';
+  if(it.num)return '<span class="numvis">'+it.num+'</span>';
+  if(it.v)return '<span class="emo">'+it.v+'</span>';
+  return "";
+}
+const hasVis=it=>!!(it&&(it.c||it.clock||it.scene||it.pct!=null||it.num||it.v));
+
+/* =================== DATA =================== */
+const DAYS=[["Monday","lunes"],["Tuesday","martes"],["Wednesday","miércoles"],["Thursday","jueves"],["Friday","viernes"],["Saturday","sábado"],["Sunday","domingo"]];
+const MONTHS=[["January","enero"],["February","febrero"],["March","marzo"],["April","abril"],["May","mayo"],["June","junio"],["July","julio"],["August","agosto"],["September","septiembre"],["October","octubre"],["November","noviembre"],["December","diciembre"]];
+const SEASON_AR=["summer","summer","autumn","autumn","autumn","winter","winter","winter","spring","spring","spring","summer"];
+const NUM_EN=["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty"];
+const NUM_ES=["cero","uno","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince","dieciséis","diecisiete","dieciocho","diecinueve","veinte"];
+const HR_ES=["","una","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez","once","doce"];
+function timeItem(h,m){
+  const nx=h%12+1, H=NUM_EN[h], N=NUM_EN[nx];
+  const es=(x,s)=>(x===1?"Es la una":"Son las "+HR_ES[x])+s;
+  if(m===0)return{en:"It's "+H+" o'clock",es:es(h," en punto"),clock:[h,0]};
+  if(m===15)return{en:"It's quarter past "+H,es:es(h," y cuarto"),clock:[h,15]};
+  if(m===30)return{en:"It's half past "+H,es:es(h," y media"),clock:[h,30]};
+  return{en:"It's quarter to "+N,es:es(nx," menos cuarto"),clock:[h,45]};
+}
+const TIMES=[];for(let h=1;h<=12;h++)[0,15,30,45].forEach(m=>TIMES.push(timeItem(h,m)));
+// simple "complete" extra question helper
+const fill=(key,hint,big,sub,answer,pool,say)=>({key,type:"choice",cat:"extra",hint,big,sub,answer,options:Array.isArray(pool)&&pool.length<=4&&pool.includes(answer)?shuffle(pool.slice()):pick(answer,pool),say:say||big.replace(/…|___/," "+answer)});
+
+const M={};
+M.colors={name:"Colores",ic:"🎨",items:[{en:"red",es:"rojo",c:"#e53935"},{en:"blue",es:"azul",c:"#1e6fe0"},{en:"yellow",es:"amarillo",c:"#fdd835"},{en:"green",es:"verde",c:"#2e9e4f"},{en:"orange",es:"naranja",c:"#fb8c00"},{en:"purple",es:"violeta",c:"#7e3fbf"},{en:"pink",es:"rosa",c:"#f06292"},{en:"black",es:"negro",c:"#1a1a1a"},{en:"white",es:"blanco",c:"#ffffff"},{en:"brown",es:"marrón",c:"#7b4a26"},{en:"gray",es:"gris",c:"#9e9e9e"}],
+  extra(){const all=["red","blue","yellow","green","orange","purple","pink","white","gray"];
+    const q=[["red","yellow","orange"],["blue","yellow","green"],["red","blue","purple"],["red","white","pink"],["black","white","gray"]].map((m,i)=>({key:"mix"+i,type:"choice",cat:"extra",hint:"Mezclá los colores",visHtml:'<span class="swatch" style="background:'+M.colors.items.find(x=>x.en===m[0]).c+'"></span> + <span class="swatch" style="background:'+M.colors.items.find(x=>x.en===m[1]).c+'"></span>',big:m[0]+" + "+m[1]+" = ?",answer:m[2],options:pick(m[2],all),say:m[0]+" and "+m[1]+" make "+m[2]}));
+    [["The sky is…","El cielo es…","blue","🌤️"],["Grass is…","El pasto es…","green","🌱"],["A banana is…","Una banana es…","yellow","🍌"],["Snow is…","La nieve es…","white","❄️"],["A strawberry is…","Una frutilla es…","red","🍓"]].forEach((x,i)=>{const f=fill("is"+i,"Completá",x[0],x[1],x[2],all);f.visHtml='<span class="emo">'+x[3]+'</span>';q.push(f);});
+    return q;}};
+M.numbers={name:"Números",ic:"🔢",items:[...Array.from({length:20},(_,i)=>({en:NUM_EN[i+1],es:NUM_ES[i+1],num:String(i+1)})),{en:"thirty",es:"treinta",num:"30"},{en:"forty",es:"cuarenta",num:"40"},{en:"fifty",es:"cincuenta",num:"50"},{en:"one hundred",es:"cien",num:"100"}],
+  tip:"Del 13 al 19 terminan en <b>-teen</b> (thirteen, fourteen…). Las decenas terminan en <b>-ty</b> (thirty, forty…).",
+  extra(){const q=[];for(let i=0;i<10;i++){const a=1+Math.floor(Math.random()*9),b=1+Math.floor(Math.random()*10);const s=a+b;
+    q.push({key:"sum"+i,type:"choice",cat:"extra",hint:"Sumá en inglés",big:NUM_EN[a]+" + "+NUM_EN[b]+" = ?",sub:a+" + "+b,answer:NUM_EN[s],options:pick(NUM_EN[s],NUM_EN.slice(Math.max(1,s-4),s+5)),say:NUM_EN[a]+" plus "+NUM_EN[b]+" is "+NUM_EN[s]});}
+    return q;}};
+M.body={name:"El cuerpo",ic:"🖐️",items:[V("eyes","ojos","👀"),V("ears","orejas","👂"),V("nose","nariz","👃"),V("mouth","boca","👄"),V("hands","manos","✋"),V("feet","pies","🦶"),V("legs","piernas","🦵"),V("arms","brazos","💪"),V("teeth","dientes","🦷"),V("tongue","lengua","👅"),V("hair","pelo","💇"),V("brain","cerebro","🧠")],
+  extra(){const all=["eyes","ears","nose","mouth","hands","feet","legs","teeth"];
+    return [["I see with my…","Veo con mis…","eyes"],["I hear with my…","Escucho con mis…","ears"],["I smell with my…","Huelo con mi…","nose"],["I eat with my…","Como con mi…","mouth"],["I write with my…","Escribo con mis…","hands"],["I walk with my…","Camino con mis…","feet"],["I brush my…","Me cepillo los…","teeth"]].map((x,i)=>fill("use"+i,"Completá",x[0],x[1],x[2],all));}};
+M.things={name:"Cosas",ic:"🎒",items:[V("pencil","lápiz","✏️"),V("book","libro","📕"),V("backpack","mochila","🎒"),V("chair","silla","🪑"),V("ball","pelota","⚽"),V("clock","reloj","⏰"),V("bed","cama","🛏️"),V("door","puerta","🚪"),V("computer","computadora","💻"),V("scissors","tijera","✂️"),V("key","llave","🔑"),V("phone","teléfono","📱"),V("umbrella","paraguas","☂️"),V("house","casa","🏠")]};
+M.animals={name:"Animales",ic:"🐶",items:[V("dog","perro","🐶"),V("cat","gato","🐱"),V("bird","pájaro","🐦"),V("fish","pez","🐟"),V("horse","caballo","🐴"),V("cow","vaca","🐮"),V("pig","chancho","🐷"),V("lion","león","🦁"),V("elephant","elefante","🐘"),V("monkey","mono","🐵"),V("rabbit","conejo","🐰"),V("frog","rana","🐸"),V("snake","serpiente","🐍"),V("bear","oso","🐻"),V("duck","pato","🦆")],
+  extra(){const all=this.items.map(i=>i.en);
+    return [["It says “moo”.","Hace “muu”.","cow"],["It says “woof”.","Hace “guau”.","dog"],["It says “meow”.","Hace “miau”.","cat"],["It says “quack”.","Hace “cuac”.","duck"],["It can fly.","Puede volar.","bird"],["It lives in the water.","Vive en el agua.","fish"],["It's very big and gray.","Es muy grande y gris.","elephant"],["It loves bananas.","Le encantan las bananas.","monkey"],["It's the king of the jungle.","Es el rey de la selva.","lion"],["It jumps and eats carrots.","Salta y come zanahorias.","rabbit"]].map((x,i)=>fill("an"+i,"¿Qué animal es?",x[0],x[1],x[2],all,x[0]+" It's a "+x[2]));}};
+M.food={name:"Comida",ic:"🍕",items:[V("apple","manzana","🍎"),V("banana","banana","🍌"),V("bread","pan","🍞"),V("milk","leche","🥛"),V("water","agua","💧"),V("cheese","queso","🧀"),V("egg","huevo","🥚"),V("pizza","pizza","🍕"),V("ice cream","helado","🍦"),V("chicken","pollo","🍗"),V("rice","arroz","🍚"),V("carrot","zanahoria","🥕"),V("cake","torta","🎂"),V("sandwich","sándwich","🥪"),V("grapes","uvas","🍇")],
+  extra(){const all=this.items.map(i=>i.en);
+    return [["I drink…","Tomo…","milk",["milk","bread","rice","egg"]],["Monkeys love…","A los monos les encantan las…","banana"],["Rabbits love…","A los conejos les encantan las…","carrot"],["On my birthday I eat…","En mi cumpleaños como…","cake",["cake","water","carrot","egg"]],["Chickens lay…","Las gallinas ponen…","egg",["egg","milk","cheese","rice"]],["Cheese is made from…","El queso se hace con…","milk",["milk","water","apple","bread"]]].map((x,i)=>fill("fd"+i,"Completá",x[0],x[1],x[2],x[3]||all));}};
+M.clothes={name:"Ropa",ic:"👕",items:[V("t-shirt","remera","👕"),V("pants","pantalón","👖"),V("dress","vestido","👗"),V("shoes","zapatillas","👟"),V("socks","medias","🧦"),V("cap","gorra","🧢"),V("jacket","campera","🧥"),V("scarf","bufanda","🧣"),V("gloves","guantes","🧤"),V("shorts","short","🩳"),V("boots","botas","👢"),V("glasses","anteojos","👓")],
+  extra(){return [["It's cold! I wear a…","¡Hace frío! Me pongo una…","jacket",["jacket","shorts","cap","t-shirt"]],["It's hot! I wear…","¡Hace calor! Me pongo un…","shorts",["shorts","scarf","gloves","boots"]],["I wear ___ on my hands.","Me pongo ___ en las manos.","gloves",["gloves","socks","shoes","cap"]],["I wear ___ on my feet.","Me pongo ___ en los pies.","socks",["socks","gloves","scarf","glasses"]],["I wear ___ to see better.","Uso ___ para ver mejor.","glasses",["glasses","boots","dress","pants"]]].map((x,i)=>fill("cl"+i,"Completá",x[0],x[1],x[2],x[3]));}};
+M.family={name:"La familia",ic:"👨‍👩‍👧",items:[V("mother","mamá","👩"),V("father","papá","👨"),V("sister","hermana","👧"),V("brother","hermano","👦"),V("grandmother","abuela","👵"),V("grandfather","abuelo","👴"),V("baby","bebé","👶"),V("family","familia","👨‍👩‍👧‍👦")],
+  extra(){const all=["mother","father","sister","brother","grandmother","grandfather","baby"];
+    return [["My mother's mother is my…","La mamá de mi mamá es mi…","grandmother"],["My father's father is my…","El papá de mi papá es mi…","grandfather"],["My mom's son is my…","El hijo de mi mamá es mi…","brother"],["My dad's daughter is my…","La hija de mi papá es mi…","sister"],["My parents are my mother and my…","Mis padres son mi mamá y mi…","father"]].map((x,i)=>fill("fm"+i,"Completá",x[0],x[1],x[2],all));}};
+
+M.days={name:"Días",ic:"📅",items:DAYS.map(([en,es])=>({en,es})),tip:"Los días en inglés se escriben siempre con <b>mayúscula</b>: Monday, Tuesday…",
+  extra(){return DAYS.map((d,i)=>({key:"after"+i,type:"choice",cat:"extra",hint:"¿Qué día viene después?",big:"What day comes after "+d[0]+"?",sub:"¿Qué día viene después del "+d[1]+"?",answer:DAYS[(i+1)%7][0],options:pick(DAYS[(i+1)%7][0],DAYS.map(x=>x[0])),say:"After "+d[0]+" comes "+DAYS[(i+1)%7][0]}));}};
+M.months={name:"Meses",ic:"🗓️",items:MONTHS.map(([en,es])=>({en,es})),
+  extra(){return MONTHS.map((m,i)=>({key:"afterm"+i,type:"choice",cat:"extra",hint:"¿Qué mes viene después?",big:"What month comes after "+m[0]+"?",sub:"¿Qué mes viene después de "+m[1]+"?",answer:MONTHS[(i+1)%12][0],options:pick(MONTHS[(i+1)%12][0],MONTHS.map(x=>x[0])),say:"After "+m[0]+" comes "+MONTHS[(i+1)%12][0]}));}};
+M.seasons={name:"Estaciones",ic:"🍂",items:[V("spring","primavera","🌸"),V("summer","verano","☀️"),V("autumn","otoño","🍂"),V("winter","invierno","⛄")],
+  tip:"En Argentina las estaciones son al revés que en Estados Unidos o Inglaterra: ¡acá diciembre es <b>summer</b>!",
+  extra(){const s=["spring","summer","autumn","winter"];
+    const q=MONTHS.map((m,i)=>({key:"ar"+i,type:"choice",cat:"extra",hint:"Estaciones en Argentina",big:"In Argentina, "+m[0]+" is in…",sub:"En Argentina, "+m[1]+" es en…",answer:SEASON_AR[i],options:shuffle(s.slice()),say:"In Argentina, "+m[0]+" is in "+SEASON_AR[i]}));
+    [["It's hot. We go to the pool.","Hace calor. Vamos a la pileta.","summer"],["It's cold and it snows.","Hace frío y nieva.","winter"],["The flowers grow.","Crecen las flores.","spring"],["The leaves fall.","Se caen las hojas.","autumn"]].forEach((x,i)=>q.push({key:"clue"+i,type:"choice",cat:"extra",hint:"¿Qué estación es?",big:x[0],sub:x[1],answer:x[2],options:shuffle(s.slice()),say:x[0]+" It's "+x[2]}));
+    return q;}};
+M.weather={name:"El clima",ic:"🌦️",items:[V("sunny","soleado","☀️"),V("cloudy","nublado","☁️"),V("rainy","lluvioso","🌧️"),V("snowy","nevado","🌨️"),V("windy","ventoso","🌬️"),V("stormy","tormentoso","⛈️"),V("foggy","con niebla","🌫️"),V("hot","caluroso","🥵"),V("cold","frío","🥶")],
+  tip:"Para preguntar: <b>What's the weather like?</b> (¿Cómo está el clima?). Respondés: <b>It's sunny.</b>",
+  extra(){const all=this.items.map(i=>i.en);
+    const q=[["It's ___. Take an umbrella!","Está ___. ¡Llevá paraguas!","rainy"],["It's ___. Let's make a snowman!","Está ___. ¡Hagamos un muñeco de nieve!","snowy"],["It's ___. Let's fly a kite!","Hay ___. ¡Remontemos un barrilete!","windy"],["It's ___. Put on your sunglasses!","Está ___. ¡Ponete los anteojos de sol!","sunny"]].map((x,i)=>fill("wt"+i,"Completá",x[0],x[1],x[2],all));
+    this.items.slice(0,7).forEach((it,i)=>q.push({key:"wl"+i,type:"choice",cat:"extra",hint:"What's the weather like?",visHtml:visHTML(it),answer:"It's "+it.en+".",options:pick("It's "+it.en+".",all.map(x=>"It's "+x+".")),say:"It's "+it.en}));
+    return q;}};
+M.clock={name:"¿Qué hora es?",ic:"🕒",items:TIMES,learn:[[3,0],[7,30],[9,15],[5,45],[12,0],[1,30],[10,15],[2,45]].map(([h,m])=>timeItem(h,m)),
+  tip:"<b>o'clock</b> = en punto · <b>quarter past</b> = y cuarto · <b>half past</b> = y media · <b>quarter to</b> = menos cuarto. La aguja <b>roja</b> es la larga (minutos).",noOrder:true};
+
+M.routine={name:"Rutinas diarias",ic:"⏰",items:[V("I wake up","Me despierto","⏰"),V("I get up","Me levanto","🛏️"),V("I take a shower","Me ducho","🚿"),V("I get dressed","Me visto","👕"),V("I brush my teeth","Me cepillo los dientes","🪥"),V("I have breakfast","Desayuno","🥣"),V("I go to school","Voy a la escuela","🚌"),V("I have lunch","Almuerzo","🍝"),V("I do my homework","Hago la tarea","📝"),V("I play with my friends","Juego con mis amigos","⚽"),V("I have dinner","Ceno","🍽️"),V("I go to bed","Me voy a dormir","😴")],
+  tip:"Tu <b>rutina</b> es lo que hacés todos los días. Se cuenta en <b>presente simple</b>: I wake up, I have breakfast… ¡Ordená tu día!",
+  seqSlots:[["I wake up"],["I take a shower","I get dressed","I have breakfast"],["I go to school"],["I have lunch"],["I do my homework","I play with my friends"],["I have dinner"],["I go to bed"]],
+  extra(){const all=this.items.map(i=>i.en);
+    return [["7:00 — ⏰","A las 7…","I wake up"],["12:30 — 🍝","Al mediodía…","I have lunch"],["21:30 — 😴","A la noche…","I go to bed"],["After breakfast 🥣…","Después de desayunar…","I brush my teeth"]].map((x,i)=>({key:"rt"+i,type:"choice",cat:"extra",hint:"¿Qué hacés?",big:x[0],sub:x[1],answer:x[2],options:pick(x[2],all),say:x[2]}));}};
+M.freq={name:"¿Con qué frecuencia?",ic:"📊",items:[{en:"always",es:"siempre",pct:100},{en:"usually",es:"generalmente",pct:80},{en:"often",es:"a menudo",pct:60},{en:"sometimes",es:"a veces",pct:40},{en:"rarely",es:"casi nunca",pct:10},{en:"never",es:"nunca",pct:0}],
+  tip:"Van <b>antes del verbo</b>: I <b>always</b> brush my teeth. Pero <b>después</b> de am/is/are: She is <b>always</b> happy.",
+  extra(){const all=this.items.map(i=>i.en);
+    return [["I ___ brush my teeth. (100%)","Siempre me cepillo los dientes.","always"],["I ___ eat vegetables. (40%)","A veces como verduras.","sometimes"],["I ___ go to school on Sunday. (0%)","Nunca voy a la escuela el domingo.","never"],["She ___ walks to school. (80%)","Ella generalmente camina a la escuela.","usually"],["We ___ play football. (60%)","Jugamos al fútbol a menudo.","often"],["He is ___ late. (10%)","Él casi nunca llega tarde.","rarely"]].map((x,i)=>({key:"fq"+i,type:"choice",cat:"extra",hint:"Completá según el %",blank:x[0],sub:x[1],answer:x[2],options:pick(x[2],all),say:x[0].replace("___",x[2]).replace(/ \(.*\)/,"")}));}};
+M.house={name:"La casa",ic:"🏡",items:[V("kitchen","cocina","🍳"),V("bathroom","baño","🛁"),V("bedroom","dormitorio","🛏️"),V("living room","living","🛋️"),V("dining room","comedor","🍽️"),V("garden","jardín","🌳"),V("garage","garaje","🚗"),V("stairs","escalera","🪜")],
+  extra(){const all=this.items.map(i=>i.en);
+    return [["I sleep in the…","Duermo en el…","bedroom"],["I cook in the…","Cocino en la…","kitchen"],["I take a shower in the…","Me ducho en el…","bathroom"],["I watch TV in the…","Miro tele en el…","living room"],["The car is in the…","El auto está en el…","garage"],["The flowers are in the…","Las flores están en el…","garden"]].map((x,i)=>fill("hs"+i,"Completá",x[0],x[1],x[2],all));}};
+M.greet={name:"Saludos",ic:"👋",items:[V("Hello!","¡Hola!","👋"),V("Good morning!","¡Buen día!","🌅"),V("Good night!","¡Buenas noches!","🌙"),V("How are you?","¿Cómo estás?","🙂"),V("I'm fine, thank you.","Estoy bien, gracias.","👍"),V("What's your name?","¿Cómo te llamás?","❓"),V("My name is Ana.","Me llamo Ana.","👧"),V("Nice to meet you.","Mucho gusto.","🤝"),V("See you later!","¡Hasta luego!","👀"),V("Goodbye!","¡Chau!","🖐️")]};
+M.school={name:"En la escuela",ic:"🏫",items:[V("Can I go to the bathroom?","¿Puedo ir al baño?","🚻"),V("Open your book.","Abrí tu libro.","📖"),V("Sit down, please.","Sentate, por favor.","🪑"),V("I don't understand.","No entiendo.","🤔"),V("Can you repeat, please?","¿Podés repetir, por favor?","🔁"),V("Raise your hand.","Levantá la mano.","🙋"),V("Let's play!","¡Juguemos!","🎲"),V("I finished!","¡Terminé!","🏁")]};
+M.me={name:"Cómo me siento",ic:"😋",items:[V("I'm hungry.","Tengo hambre.","😋"),V("I'm thirsty.","Tengo sed.","🥤"),V("I'm tired.","Estoy cansado.","🥱"),V("I'm happy.","Estoy feliz.","😄"),V("I'm sad.","Estoy triste.","😢"),V("I'm angry.","Estoy enojado.","😠"),V("I'm scared.","Tengo miedo.","😱"),V("I like pizza.","Me gusta la pizza.","🍕"),V("I don't like soup.","No me gusta la sopa.","🥣")]};
+
+M.prep={name:"¿Dónde está el gato?",ic:"📦",items:[{en:"in",es:"adentro de",scene:"in"},{en:"on",es:"sobre / encima de",scene:"on"},{en:"under",es:"debajo de",scene:"under"},{en:"next to",es:"al lado de",scene:"next to"},{en:"behind",es:"detrás de",scene:"behind"},{en:"in front of",es:"delante de",scene:"in front of"},{en:"between",es:"entre",scene:"between"}],
+  tip:"Las <b>preposiciones de lugar</b> dicen dónde está algo: The cat is <b>on</b> the box. The cat is <b>under</b> the table.",
+  extra(){const all=this.items.map(i=>i.en);const obj={"in":"the box","on":"the box","under":"the table","next to":"the box","behind":"the tree","in front of":"the tree","between":"the boxes"};
+    return this.items.map((it,i)=>({key:"pp"+i,type:"choice",cat:"extra",hint:"¿Dónde está el gato?",visHtml:visHTML(it),blank:"The cat is ___ "+obj[it.en]+".",answer:it.en,options:pick(it.en,all),say:"The cat is "+it.en+" "+obj[it.en]}));},noSpell:true,noOrder:true};
+M.psimple={name:"Presente simple",ic:"🔁",tip:"<b>Presente simple</b> = cosas que hacés siempre o seguido. Con <b>he / she / it</b> se agrega -s o -es: I play → she plays, he watches.",
+  pairs:[["I play","she plays"],["I watch","he watches"],["I go","she goes"],["I have","he has"],["I study","she studies"],["I do","he does"]],
+  blanks:[["She ___ soccer every day.","plays",["play","playing"],"Ella juega al fútbol todos los días."],["I ___ milk in the morning.","drink",["drinks","drinking"],"Tomo leche a la mañana."],["My dad ___ in a hospital.","works",["work","working"],"Mi papá trabaja en un hospital."],["They ___ to school by bus.","go",["goes","going"],"Ellos van a la escuela en colectivo."],["He ___ TV after dinner.","watches",["watch","watchs"],"Él mira tele después de cenar."],["We ___ English on Mondays.","have",["has","having"],"Tenemos inglés los lunes."],["The cat ___ fish.","likes",["like","liking"],"Al gato le gusta el pescado."],["Does she ___ pizza?","like",["likes","liking"],"¿A ella le gusta la pizza?"],["I don't ___ coffee.","drink",["drinks","drinking"],"No tomo café."],["Tom ___ not play tennis.","does",["do","is"],"Tom no juega al tenis."]]};
+M.herday={name:"La rutina de Sofi",ic:"👧",tip:"Cuando contás la rutina de <b>otra persona</b> (he / she) el verbo lleva <b>-s</b>: She wakes up, she has breakfast, she goes to school.",
+  pairs:[["wake up","wakes up"],["have","has"],["go","goes"],["brush","brushes"],["take","takes"],["do","does"]],
+  blanks:[["Sofi ___ up at seven o'clock.","wakes",["wake","waking"],"Sofi se despierta a las siete."],["She ___ a shower.","takes",["take","taking"],"Ella se ducha."],["She ___ breakfast with her family.","has",["have","haves"],"Ella desayuna con su familia."],["She ___ her teeth.","brushes",["brush","brushs"],"Ella se cepilla los dientes."],["She ___ to school by bike.","goes",["go","gos"],"Ella va a la escuela en bici."],["In the afternoon she ___ her homework.","does",["do","dos"],"A la tarde hace la tarea."],["What time ___ she go to bed?","does",["do","is"],"¿A qué hora se va a dormir?"],["She doesn't ___ TV in the morning.","watch",["watches","watching"],"Ella no mira tele a la mañana."]]};
+M.pcont={name:"Presente continuo",ic:"🏃",tip:"<b>Presente continuo</b> = lo que está pasando ahora. <b>am / is / are</b> + verbo con <b>-ing</b>: I am eating, she is running.",
+  pairs:[["run","running"],["swim","swimming"],["eat","eating"],["write","writing"],["dance","dancing"],["read","reading"]],
+  blanks:[["I am ___ a book.","reading",["read","reads"],"Estoy leyendo un libro."],["She is ___ with her friends.","playing",["play","plays"],"Ella está jugando con sus amigos."],["They ___ running in the park.","are",["is","am"],"Ellos están corriendo en el parque."],["The baby ___ sleeping.","is",["are","am"],"El bebé está durmiendo."],["We are ___ lunch.","eating",["eat","eats"],"Estamos almorzando."],["Look! It ___ raining.","is",["are","am"],"¡Mirá! Está lloviendo."],["What are you ___?","doing",["do","does"],"¿Qué estás haciendo?"],["I ___ drawing a picture.","am",["is","are"],"Estoy haciendo un dibujo."]]};
+M.will={name:"Futuro con will",ic:"🔮",tip:"<b>will</b> + verbo = predicciones, promesas y decisiones del momento: I will help you. Negativo: <b>won't</b>.",
+  blanks:[["Tomorrow it ___ rain.","will",["is","does"],"Mañana va a llover."],["I think I ___ be a doctor.","will",["am","do"],"Creo que voy a ser doctor."],["Don't worry, I ___ help you!","will",["am","was"],"¡Tranqui, te voy a ayudar!"],["She won't ___ late.","be",["is","being"],"Ella no va a llegar tarde."],["Will you come to my party? Yes, I ___.","will",["do","am"],"¿Vas a venir a mi cumple? Sí."],["We will ___ the game!","win",["wins","winning"],"¡Vamos a ganar el partido!"]]};
+M.goingto={name:"Futuro con going to",ic:"🧳",tip:"<b>am / is / are + going to</b> + verbo = planes que ya decidiste: I am going to visit my grandma.",
+  blanks:[["I am ___ to visit my grandma.","going",["go","goes"],"Voy a visitar a mi abuela."],["Look at the clouds! It is going to ___.","rain",["rains","raining"],"¡Mirá las nubes! Va a llover."],["We ___ going to play football.","are",["is","am"],"Vamos a jugar al fútbol."],["He is going to ___ a cake.","make",["makes","making"],"Él va a hacer una torta."],["Are you going ___ watch the movie?","to",["for","at"],"¿Vas a ver la película?"],["She ___ going to swim.","is",["are","am"],"Ella va a nadar."]]};
+M.cond={name:"Condicionales (if)",ic:"🔀",tip:"<b>If</b> + presente, <b>will</b> + verbo: If it rains, I will stay home. Para cosas que siempre pasan: If you heat ice, it melts.",
+  blanks:[["If it rains, I ___ stay home.","will",["am","did"],"Si llueve, me voy a quedar en casa."],["If you heat ice, it ___.","melts",["melt","melting"],"Si calentás hielo, se derrite."],["If you study, you ___ pass the test.","will",["are","do"],"Si estudiás, vas a aprobar la prueba."],["If I ___ time, I will call you.","have",["will have","had"],"Si tengo tiempo, te llamo."],["If she is hungry, she ___ eat a sandwich.","will",["is","does"],"Si tiene hambre, va a comer un sándwich."],["If you mix red and yellow, you ___ orange.","get",["gets","getting"],"Si mezclás rojo y amarillo, obtenés naranja."],["If I had wings, I ___ fly.","would",["will","am"],"Si tuviera alas, volaría."]]};
+M.waswere={name:"Was / were",ic:"🕰️",tip:"<b>was</b> con I / he / she / it. <b>were</b> con you / we / they.",
+  blanks:[["Yesterday I ___ at the park.","was",["were","am"],"Ayer estuve en el parque."],["They ___ very happy.","were",["was","is"],"Ellos estaban muy felices."],["It ___ cold last night.","was",["were","is"],"Anoche hizo frío."],["We ___ at school.","were",["was","are"],"Estábamos en la escuela."],["___ you at home?","Were",["Was","Is"],"¿Estabas en tu casa?"],["My dog ___ in the garden.","was",["were","are"],"Mi perro estaba en el jardín."]]};
+M.regular={name:"Verbos regulares",ic:"✅",edDecoy:true,tip:"Verbos <b>regulares</b>: se agrega <b>-ed</b>. play → played, watch → watched, visit → visited.",
+  pairs:[["play","played"],["clean","cleaned"],["watch","watched"],["jump","jumped"],["visit","visited"],["dance","danced"],["cook","cooked"],["study","studied"]],
+  blanks:[["I ___ football yesterday.","played",["play","playing"],"Ayer jugué al fútbol."],["She ___ her room.","cleaned",["clean","cleaning"],"Ella limpió su cuarto."],["We ___ a movie last night.","watched",["watch","watching"],"Anoche vimos una película."],["He ___ to music.","listened",["listen","listens"],"Él escuchó música."],["They ___ in the pool.","jumped",["jump","jumping"],"Ellos saltaron en la pileta."],["I ___ my grandma on Sunday.","visited",["visit","visiting"],"El domingo visité a mi abuela."],["The class ___ at nine.","started",["start","starting"],"La clase empezó a las nueve."]]};
+M.irregular={name:"Verbos irregulares",ic:"⚡",edDecoy:true,tip:"Los <b>irregulares</b> cambian: go → went, eat → ate, see → saw, have → had, run → ran, swim → swam, buy → bought. ¡Hay que aprenderlos!",
+  pairs:[["go","went"],["eat","ate"],["see","saw"],["have","had"],["run","ran"],["swim","swam"],["buy","bought"],["make","made"],["drink","drank"],["write","wrote"],["come","came"],["get","got"]],
+  blanks:[["Last summer we ___ to the beach.","went",["goed","go"],"El verano pasado fuimos a la playa."],["I ___ a big ice cream.","ate",["eated","eat"],"Me comí un helado grande."],["She ___ a rainbow.","saw",["seed","see"],"Ella vio un arcoíris."],["We ___ a lot of fun.","had",["haved","have"],"Nos divertimos mucho."],["He ___ very fast.","ran",["runned","run"],"Él corrió muy rápido."],["They ___ in the river.","swam",["swimmed","swim"],"Ellos nadaron en el río."],["Mom ___ a new bike for me.","bought",["buyed","buy"],"Mamá me compró una bici nueva."],["I ___ a sandcastle.","made",["maked","make"],"Hice un castillo de arena."]]};
+
+/* ---------- CIUDAD DEL BÁSICO (A1) ---------- */
+M.tobe={name:"Verbo to be",ic:"🙋",tip:"<b>I am</b> · <b>you are</b> · <b>he / she / it is</b> · <b>we / they are</b>. Negativo: <b>isn't / aren't</b>, I'm not. Pregunta: <b>Are you…? Is she…?</b>",
+  pairs:[["I am","I'm"],["you are","you're"],["he is","he's"],["she is","she's"],["we are","we're"],["they are","they're"],["is not","isn't"],["are not","aren't"]],pairHint:"¿Cómo se contrae?",
+  blanks:[["I ___ ten years old.","am",["is","are"],"Tengo diez años."],["She ___ my teacher.","is",["am","are"],"Ella es mi maestra."],["We ___ friends.","are",["is","am"],"Somos amigos."],["___ you hungry?","Are",["Is","Am"],"¿Tenés hambre?"],["My cats ___ black.","are",["is","am"],"Mis gatos son negros."],["He ___ not at home.","is",["are","am"],"Él no está en casa."],["It ___ a beautiful day.","is",["are","am"],"Es un día hermoso."],["I'm not tired. I ___ happy!","am",["is","are"],"No estoy cansado. ¡Estoy feliz!"]]};
+M.possess={name:"My, your, his, her…",ic:"👪",tip:"Los <b>posesivos</b>: I → <b>my</b>, you → <b>your</b>, he → <b>his</b>, she → <b>her</b>, it → <b>its</b>, we → <b>our</b>, they → <b>their</b>.",
+  pairs:[["I","my"],["you","your"],["he","his"],["she","her"],["it","its"],["we","our"],["they","their"]],pairHint:"¿Cuál es el posesivo?",
+  blanks:[["I love ___ new book.","my",["me","I"],"Amo mi libro nuevo."],["She loves ___ dog.","her",["his","she"],"Ella ama a su perro."],["He is washing ___ car.","his",["her","he"],"Él está lavando su auto."],["We like ___ school.","our",["we","us"],"Nos gusta nuestra escuela."],["They are with ___ parents.","their",["they","there"],"Están con sus padres."],["What's ___ name?","your",["you","you're"],"¿Cuál es tu nombre?"],["The cat is eating ___ food.","its",["it's","it"],"El gato está comiendo su comida."]]};
+M.therebe={name:"There is / There are",ic:"🏞️",tip:"<b>There is</b> + singular (There is a cat). <b>There are</b> + plural (There are two cats). Pregunta: <b>Is there…? Are there…?</b> En pasado: <b>there was / there were</b>.",
+  blanks:[["There ___ a cat on the sofa.","is",["are","be"],"Hay un gato en el sillón."],["There ___ three books on the table.","are",["is","be"],"Hay tres libros en la mesa."],["___ there a bank near here?","Is",["Are","Do"],"¿Hay un banco cerca de acá?"],["___ there any apples?","Are",["Is","Do"],"¿Hay manzanas?"],["There ___ any milk in the fridge.","isn't",["aren't","not"],"No hay leche en la heladera."],["There ___ many people at the party.","were",["was","is"],"Había mucha gente en la fiesta."],["There ___ a big storm yesterday.","was",["were","is"],"Ayer hubo una gran tormenta."]]};
+M.can={name:"Can / can't",ic:"🦸",tip:"<b>can</b> = poder / saber hacer algo. <b>can't</b> = no poder. Después de can el verbo va <b>sin to y sin -s</b>: She can swim.",
+  items:[V("I can swim","Sé nadar","🏊"),V("I can ride a bike","Sé andar en bici","🚲"),V("I can play the guitar","Sé tocar la guitarra","🎸"),V("I can't fly","No puedo volar","🪽"),V("Can you help me?","¿Me podés ayudar?","🙋"),V("Can I come in?","¿Puedo pasar?","🚪"),V("She can speak English","Ella sabe hablar inglés","🗣️"),V("Fish can't walk","Los peces no pueden caminar","🐟")],
+  blanks:[["Birds ___ fly.","can",["can't","cans"],"Los pájaros pueden volar."],["Penguins ___ fly.","can't",["can","cans"],"Los pingüinos no pueden volar."],["___ you swim? Yes, I can.","Can",["Do","Are"],"¿Sabés nadar? Sí."],["She can ___ the piano.","play",["plays","playing"],"Ella sabe tocar el piano."],["___ I open the window?","Can",["Am","Does"],"¿Puedo abrir la ventana?"]]};
+M.havegot={name:"Have got / has got",ic:"🎁",tip:"<b>have got</b> = tener (I / you / we / they). <b>has got</b> con he / she / it. Pregunta: <b>Have you got…?</b> Negativo: <b>haven't / hasn't got</b>.",
+  blanks:[["I ___ got a new bike.","have",["has","am"],"Tengo una bici nueva."],["She ___ got long hair.","has",["have","is"],"Ella tiene el pelo largo."],["___ you got a pet?","Have",["Has","Do"],"¿Tenés mascota?"],["He hasn't ___ a phone.","got",["get","gets"],"Él no tiene teléfono."],["They ___ got a big house.","have",["has","is"],"Tienen una casa grande."],["My dog ___ got brown eyes.","has",["have","is"],"Mi perro tiene ojos marrones."]]};
+M.wh={name:"Preguntas (Wh-)",ic:"❓",tip:"<b>What</b> qué · <b>Where</b> dónde · <b>When</b> cuándo · <b>Who</b> quién · <b>Why</b> por qué · <b>How</b> cómo · <b>How many</b> cuántos · <b>How old</b> qué edad.",
+  items:[{en:"what",es:"qué"},{en:"where",es:"dónde"},{en:"when",es:"cuándo"},{en:"who",es:"quién"},{en:"why",es:"por qué"},{en:"how",es:"cómo"},{en:"which",es:"cuál"},{en:"how many",es:"cuántos"},{en:"how old",es:"qué edad"}],
+  blanks:[["___ do you live? In Córdoba.","Where",["When","Who"],"¿Dónde vivís? En Córdoba."],["___ is your birthday? In May.","When",["Where","What"],"¿Cuándo es tu cumpleaños? En mayo."],["___ is that man? He's my uncle.","Who",["What","Where"],"¿Quién es ese hombre? Es mi tío."],["___ are you sad? Because I lost my keys.","Why",["How","What"],"¿Por qué estás triste? Porque perdí mis llaves."],["___ old are you? I'm twelve.","How",["What","Who"],"¿Cuántos años tenés? Tengo doce."],["___ is your favorite color? Blue.","What",["Who","Where"],"¿Cuál es tu color favorito? Azul."],["How ___ brothers have you got? Two.","many",["much","old"],"¿Cuántos hermanos tenés? Dos."]]};
+M.jobs={name:"Profesiones",ic:"👩‍⚕️",items:[V("doctor","médico/a","🧑‍⚕️"),V("teacher","docente","🧑‍🏫"),V("firefighter","bombero/a","🧑‍🚒"),V("police officer","policía","👮"),V("cook","cocinero/a","🧑‍🍳"),V("farmer","granjero/a","🧑‍🌾"),V("pilot","piloto","🧑‍✈️"),V("scientist","científico/a","🧑‍🔬"),V("singer","cantante","🧑‍🎤"),V("mechanic","mecánico/a","🧑‍🔧"),V("programmer","programador/a","🧑‍💻"),V("artist","artista","🧑‍🎨")],
+  tip:"Para decir tu profesión usás <b>a / an</b>: I'm <b>a</b> teacher. She's <b>an</b> artist.",
+  extra(){const all=this.items.map(i=>i.en);
+    return [["A ___ flies planes.","Un piloto vuela aviones.","pilot"],["A ___ puts out fires.","Un bombero apaga incendios.","firefighter"],["A ___ works in a hospital.","Un médico trabaja en un hospital.","doctor"],["A ___ fixes cars.","Un mecánico arregla autos.","mechanic"],["A ___ grows vegetables.","Un granjero cultiva verduras.","farmer"],["A ___ writes code.","Un programador escribe código.","programmer"]].map((x,i)=>fill("jb"+i,"¿Quién es?",x[0],x[1],x[2],all));}};
+M.places={name:"La ciudad",ic:"🏙️",items:[V("school","escuela","🏫"),V("hospital","hospital","🏥"),V("bank","banco","🏦"),V("supermarket","supermercado","🛒"),V("park","plaza / parque","🏞️"),V("library","biblioteca","📚"),V("restaurant","restaurante","🍴"),V("cinema","cine","🎬"),V("post office","correo","🏤"),V("train station","estación de tren","🚉"),V("airport","aeropuerto","✈️"),V("pharmacy","farmacia","💊")],
+  extra(){const all=this.items.map(i=>i.en);
+    return [["I buy medicine at the…","Compro remedios en la…","pharmacy"],["I watch movies at the…","Veo películas en el…","cinema"],["I borrow books at the…","Pido libros prestados en la…","library"],["Planes land at the…","Los aviones aterrizan en el…","airport"],["I buy food at the…","Compro comida en el…","supermarket"],["I send letters at the…","Mando cartas en el…","post office"]].map((x,i)=>fill("pl"+i,"Completá",x[0],x[1],x[2],all));}};
+M.hobbies={name:"Deportes y hobbies",ic:"⚽",items:[V("football","fútbol","⚽"),V("basketball","básquet","🏀"),V("tennis","tenis","🎾"),V("swimming","natación","🏊"),V("cycling","ciclismo","🚴"),V("dancing","baile","💃"),V("reading","lectura","📖"),V("painting","pintura","🎨"),V("cooking","cocina","🍳"),V("chess","ajedrez","♟️"),V("video games","videojuegos","🎮"),V("music","música","🎵")],
+  tip:"<b>play</b> + deportes con pelota y juegos (play football, play chess). <b>go</b> + actividades con -ing (go swimming). <b>do</b> + artes marciales y gimnasia (do karate).",
+  extra(){return [["I ___ football every Saturday.","Juego al fútbol todos los sábados.","play",["play","go","do"]],["We ___ swimming in summer.","Vamos a nadar en verano.","go",["go","play","do"]],["She ___ karate on Mondays.","Ella hace karate los lunes.","does",["does","plays","goes"]],["They ___ cycling on Sundays.","Salen a andar en bici los domingos.","go",["go","play","do"]],["Do you ___ chess?","¿Jugás al ajedrez?","play",["play","go","do"]]].map((x,i)=>fill("hb"+i,"¿Play, go o do?",x[0],x[1],x[2],x[3]));}};
+M.opposites={name:"Opuestos",ic:"↔️",tip:"Aprender adjetivos de a pares te ayuda a recordarlos: <b>big ↔ small</b>, <b>hot ↔ cold</b>, <b>easy ↔ difficult</b>…",
+  pairs:[["big","small"],["hot","cold"],["fast","slow"],["happy","sad"],["tall","short"],["young","old"],["clean","dirty"],["easy","difficult"],["open","closed"],["full","empty"],["heavy","light"],["early","late"]],pairHint:"¿Cuál es el opuesto?",
+  blanks:[["An elephant is big, a mouse is ___.","small",["tall","big"],"Un elefante es grande, un ratón es chico."],["A cheetah is fast, a turtle is ___.","slow",["fast","short"],"Un guepardo es rápido, una tortuga es lenta."],["Ice is cold, fire is ___.","hot",["cold","heavy"],"El hielo es frío, el fuego es caliente."],["My grandpa is old, my baby sister is ___.","young",["new","old"],"Mi abuelo es viejo, mi hermanita es joven."],["The test was easy, not ___.","difficult",["easy","heavy"],"La prueba fue fácil, no difícil."],["The glass is empty, not ___.","full",["empty","light"],"El vaso está vacío, no lleno."]]};
+
+/* ---------- BOSQUE INTERMEDIO (A2–B1) ---------- */
+M.compar={name:"Comparativos",ic:"📏",tip:"Adjetivos cortos: <b>-er than</b> (taller than). Largos: <b>more … than</b> (more interesting than). Irregulares: <b>good → better</b>, <b>bad → worse</b>.",
+  pairs:[["tall","taller"],["big","bigger"],["happy","happier"],["good","better"],["bad","worse"],["interesting","more interesting"]],pairHint:"¿Cuál es el comparativo?",
+  blanks:[["An elephant is ___ than a dog.","bigger",["big","biggest"],"Un elefante es más grande que un perro."],["My brother is ___ than me.","taller",["tall","more tall"],"Mi hermano es más alto que yo."],["This book is ___ interesting than that one.","more",["most","much"],"Este libro es más interesante que ese."],["Pizza is ___ than soup.","better",["gooder","best"],"La pizza es mejor que la sopa."],["Today is ___ than yesterday.","colder",["cold","more cold"],"Hoy hace más frío que ayer."],["The test was ___ than I thought.","easier",["easyer","more easy"],"La prueba fue más fácil de lo que pensé."],["My cold is ___ today.","worse",["badder","worst"],"Mi resfrío está peor hoy."],["A car is faster ___ a bike.","than",["that","then"],"Un auto es más rápido que una bici."]],
+  correct:[["She is taller than me.",["She is more tall than me.","She is taller that me.","She is tallest than me."],"Ella es más alta que yo."],["This movie is better than the book.",["This movie is more good than the book.","This movie is gooder than the book.","This movie is better that the book."],"Esta película es mejor que el libro."]]};
+M.superl={name:"Superlativos",ic:"🏆",tip:"<b>the -est</b> (the tallest), <b>the most</b> + adjetivo largo (the most beautiful). Irregulares: <b>the best</b>, <b>the worst</b>.",
+  pairs:[["tall","the tallest"],["big","the biggest"],["good","the best"],["bad","the worst"],["beautiful","the most beautiful"],["happy","the happiest"]],pairHint:"¿Cuál es el superlativo?",
+  blanks:[["Mount Everest is ___ highest mountain in the world.","the",["a","more"],"El Everest es la montaña más alta del mundo."],["The blue whale is the ___ animal.","biggest",["bigger","most big"],"La ballena azul es el animal más grande."],["She is the ___ student in the class.","best",["better","goodest"],"Ella es la mejor alumna de la clase."],["This is the most ___ place I know.","beautiful",["beautifulest","more beautiful"],"Este es el lugar más lindo que conozco."],["It was the ___ day of my life!","happiest",["happyest","most happy"],"¡Fue el día más feliz de mi vida!"],["That was the ___ movie ever.","worst",["baddest","worse"],"Esa fue la peor película de todas."]]};
+M.someany={name:"Some, any, much, many",ic:"🧺",tip:"<b>some</b> en afirmativas y ofrecimientos; <b>any</b> en negativas y preguntas. <b>many</b> con cosas contables (apples), <b>much</b> con incontables (water, money). <b>a lot of</b> sirve para las dos.",
+  blanks:[["There are ___ apples in the bag.","some",["any","much"],"Hay algunas manzanas en la bolsa."],["Is there ___ milk?","any",["some","many"],"¿Hay leche?"],["I don't have ___ money.","any",["some","many"],"No tengo plata."],["How ___ sugar do you want?","much",["many","any"],"¿Cuánta azúcar querés?"],["How ___ friends do you have?","many",["much","any"],"¿Cuántos amigos tenés?"],["There isn't ___ water in the bottle.","much",["many","some"],"No hay mucha agua en la botella."],["She has a lot ___ books.","of",["to","many"],"Ella tiene muchos libros."],["Would you like ___ tea?","some",["any","many"],"¿Querés té?"]]};
+M.didq={name:"Pasado: preguntas y negativas",ic:"❔",tip:"Preguntas: <b>Did</b> + sujeto + verbo <b>base</b> (Did you go?). Negativas: <b>didn't</b> + verbo base (I didn't go). ¡Nunca “didn't went”!",
+  blanks:[["___ you go to the party?","Did",["Do","Were"],"¿Fuiste a la fiesta?"],["I didn't ___ my homework.","do",["did","done"],"No hice la tarea."],["Did she ___ the movie?","like",["liked","likes"],"¿Le gustó la película?"],["We ___ see the match.","didn't",["don't","weren't"],"No vimos el partido."],["Where did you ___ last summer?","go",["went","gone"],"¿Adónde fuiste el verano pasado?"],["What ___ you eat for lunch?","did",["do","were"],"¿Qué comiste al mediodía?"],["He didn't ___ me.","call",["called","calls"],"No me llamó."]],
+  correct:[["Did you see Tom?",["Did you saw Tom?","Do you saw Tom?","You did see Tom?"],"¿Viste a Tom?"],["I didn't go to school.",["I didn't went to school.","I not went to school.","I don't went to school."],"No fui a la escuela."]]};
+M.pastcont={name:"Pasado continuo",ic:"🌧️",tip:"<b>was / were</b> + verbo con <b>-ing</b> = algo que estaba pasando: I was sleeping when the phone rang. <b>when</b> + acción corta, <b>while</b> + acción larga.",
+  blanks:[["I ___ watching TV when you called.","was",["were","am"],"Estaba mirando tele cuando llamaste."],["They were ___ football at 5 pm.","playing",["play","played"],"Estaban jugando al fútbol a las 5."],["What ___ you doing last night at nine?","were",["was","did"],"¿Qué estabas haciendo anoche a las nueve?"],["It was raining ___ I left home.","when",["while","during"],"Estaba lloviendo cuando salí de casa."],["___ I was cooking, the phone rang.","While",["When","During"],"Mientras cocinaba, sonó el teléfono."],["She ___ sleeping when the alarm rang.","was",["were","is"],"Ella estaba durmiendo cuando sonó la alarma."]]};
+M.usedto={name:"Used to",ic:"👴",tip:"<b>used to</b> + verbo = hábitos o estados del pasado que ya no pasan: I used to play with dolls (antes jugaba). Negativo: <b>didn't use to</b>.",
+  blanks:[["I ___ to live in Buenos Aires.","used",["use","using"],"Antes vivía en Buenos Aires."],["She used to ___ long hair.","have",["had","having"],"Antes ella tenía el pelo largo."],["Did you ___ to play the piano?","use",["used","using"],"¿Antes tocabas el piano?"],["We didn't use ___ eat vegetables.","to",["for","the"],"Antes no comíamos verduras."],["My grandpa used to ___ every day.","walk",["walked","walking"],"Mi abuelo caminaba todos los días."]],
+  correct:[["I used to play football.",["I use to played football.","I used play football.","I am used to play football."],"Antes jugaba al fútbol."]]};
+M.pperf1={name:"Presente perfecto",ic:"🌍",tip:"<b>have / has</b> + participio = experiencias y cosas recientes: I have been to Brazil. She has just arrived. <b>ever</b> = alguna vez, <b>never</b> = nunca, <b>just</b> = recién.",
+  pairs:[["go","gone"],["see","seen"],["eat","eaten"],["be","been"],["do","done"],["write","written"],["take","taken"],["meet","met"]],pairHint:"¿Cuál es el participio?",
+  blanks:[["Have you ever ___ to London?","been",["went","go"],"¿Alguna vez estuviste en Londres?"],["I have never ___ sushi.","eaten",["ate","eat"],"Nunca comí sushi."],["She ___ seen that movie three times.","has",["have","is"],"Ella vio esa película tres veces."],["We have just ___ lunch.","had",["have","has"],"Acabamos de almorzar."],["___ you ever met a famous person?","Have",["Did","Has"],"¿Alguna vez conociste a alguien famoso?"],["He has ___ a book about dragons.","written",["wrote","write"],"Él escribió un libro sobre dragones."],["They have ___ to Brazil.","gone",["went","go"],"Se fueron a Brasil."]]};
+M.pperf2={name:"For, since, already, yet",ic:"⏳",tip:"<b>for</b> + período (for two years). <b>since</b> + punto de inicio (since 2020). <b>already</b> = ya (afirmativas). <b>yet</b> = ya / todavía (preguntas y negativas, al final).",
+  blanks:[["I have lived here ___ ten years.","for",["since","during"],"Vivo acá hace diez años."],["She has worked here ___ 2019.","since",["for","from"],"Trabaja acá desde 2019."],["Have you finished ___?","yet",["already","still"],"¿Ya terminaste?"],["I have ___ done my homework.","already",["yet","ever"],"Ya hice la tarea."],["He hasn't called ___.","yet",["already","since"],"Todavía no llamó."],["We have known each other ___ we were kids.","since",["for","when"],"Nos conocemos desde que éramos chicos."],["How ___ have you studied English?","long",["much","many"],"¿Hace cuánto estudiás inglés?"],["I haven't seen her ___ a long time.","for",["since","ago"],"No la veo hace mucho tiempo."]]};
+M.modals1={name:"Must, have to, should",ic:"📜",tip:"<b>must</b> = obligación fuerte / regla. <b>have to</b> = obligación externa. <b>should</b> = consejo. <b>mustn't</b> = está prohibido. <b>don't have to</b> = no es necesario.",
+  blanks:[["You ___ wear a seatbelt. It's the law.","must",["should","can"],"Tenés que usar cinturón. Es la ley."],["You look tired. You ___ go to bed early.","should",["must","have"],"Te ves cansado. Deberías acostarte temprano."],["You ___ smoke here. It's forbidden.","mustn't",["don't have to","can"],"No se puede fumar acá. Está prohibido."],["Tomorrow is Sunday, so I ___ get up early.","don't have to",["mustn't","haven't"],"Mañana es domingo, así que no tengo que madrugar."],["She has ___ work on Saturdays.","to",["for","must"],"Ella tiene que trabajar los sábados."],["You ___ study more if you want to pass.","should",["shoulds","must to"],"Deberías estudiar más si querés aprobar."],["Do I ___ to bring anything?","have",["must","should"],"¿Tengo que llevar algo?"]]};
+M.modals2={name:"Might, may, could",ic:"🤔",tip:"<b>might / may</b> = puede que (posibilidad): It might rain. <b>could</b> = podría / pedido amable, y también pasado de can: I could swim when I was five.",
+  blanks:[["Take an umbrella. It ___ rain.","might",["must","should"],"Llevá paraguas. Puede que llueva."],["I'm not sure. She ___ be at home.","may",["must","will"],"No estoy seguro. Puede que esté en casa."],["Could you ___ me, please?","help",["helping","to help"],"¿Me podrías ayudar, por favor?"],["When I was five, I ___ swim.","could",["can","might"],"Cuando tenía cinco años sabía nadar."],["He ___ not come to the party. He's sick.","might",["must","can"],"Puede que no venga a la fiesta. Está enfermo."],["___ I use your phone?","May",["Might","Must"],"¿Puedo usar tu teléfono?"]]};
+
+/* ---------- PUERTO DE LA CONVERSACIÓN ---------- */
+M.restaurant={name:"En el restaurante",ic:"🍽️",tip:"Para pedir con amabilidad usá <b>I'd like…</b> (quisiera) y <b>Could I have…?</b> (¿me podría traer…?).",
+  items:[V("A table for two, please.","Una mesa para dos, por favor.","🪑"),V("Can I see the menu, please?","¿Me trae la carta, por favor?","📋"),V("I'd like a hamburger.","Quisiera una hamburguesa.","🍔"),V("What do you recommend?","¿Qué me recomienda?","🤔"),V("Could I have some water?","¿Me podría traer agua?","💧"),V("I'm allergic to nuts.","Soy alérgico a los frutos secos.","🥜"),V("The check, please.","La cuenta, por favor.","🧾"),V("Keep the change.","Quédese con el cambio.","🪙")],
+  dialogs:[["Are you ready to order?","Yes, I'd like the chicken, please.",["Yes, I'm ready to order you.","No, I'm a chicken.","Yes, I ordered yesterday."],"¿Están listos para pedir?"],["Anything to drink?","An orange juice, please.",["Yes, I drink.","Anything, thank you.","I'm drinking."],"¿Algo para tomar?"],["How was your meal?","It was delicious, thank you!",["It was a meal.","Yes, please.","I'm fine, and you?"],"¿Qué tal la comida?"],["Would you like dessert?","No, thanks. I'm full.",["Yes, I'm dessert.","No, I'm empty.","I like you."],"¿Quiere postre?"]]};
+M.shopping={name:"De compras",ic:"🛍️",
+  items:[V("How much is this?","¿Cuánto cuesta esto?","💲"),V("Can I try it on?","¿Me lo puedo probar?","👗"),V("Do you have a smaller size?","¿Tiene un talle más chico?","📏"),V("I'm just looking, thanks.","Solo estoy mirando, gracias.","👀"),V("Can I pay by card?","¿Puedo pagar con tarjeta?","💳"),V("It's too expensive.","Es demasiado caro.","💸"),V("I'll take it.","Me lo llevo.","🛍️"),V("Where is the fitting room?","¿Dónde está el probador?","🚪")],
+  dialogs:[["Can I help you?","I'm just looking, thanks.",["Yes, I can help you.","No, I can't.","I'm helping."],"¿Lo puedo ayudar?"],["What size are you?","Medium, I think.",["I'm fine.","I'm 12 years old.","I'm from Argentina."],"¿Qué talle sos?"],["It's 30 dollars.","Can I pay by card?",["How much is it?","It's a dollar.","I'm 30."],"Cuesta 30 dólares."],["Does it fit?","Yes, it's perfect!",["Yes, it's a fit.","No, I'm fit.","It's in the box."],"¿Te queda bien?"]]};
+M.directions={name:"Cómo llegar",ic:"🗺️",
+  items:[V("Excuse me, where is the station?","Disculpe, ¿dónde está la estación?","🚉"),V("Go straight ahead.","Seguí derecho.","⬆️"),V("Turn left.","Doblá a la izquierda.","⬅️"),V("Turn right.","Doblá a la derecha.","➡️"),V("It's on the corner.","Está en la esquina.","📍"),V("It's next to the bank.","Está al lado del banco.","🏦"),V("Cross the street.","Cruzá la calle.","🚸"),V("It's about five minutes away.","Queda a unos cinco minutos.","⏱️")],
+  dialogs:[["Excuse me, is there a pharmacy near here?","Yes, go straight and turn left.",["Yes, I'm a pharmacy.","No, I'm here.","Yes, it's near me."],"Disculpe, ¿hay una farmacia cerca?"],["Is it far?","No, it's a five-minute walk.",["No, it's five.","Yes, I'm far.","It's on Monday."],"¿Queda lejos?"],["How do I get to the museum?","Take bus number 10.",["You get it.","By the museum.","It's a museum."],"¿Cómo llego al museo?"]]};
+M.travel={name:"De viaje",ic:"✈️",
+  items:[V("Here is my passport.","Acá está mi pasaporte.","🛂"),V("I have a reservation.","Tengo una reserva.","🏨"),V("Where is gate 5?","¿Dónde está la puerta 5?","🚪"),V("My flight is delayed.","Mi vuelo está demorado.","⏳"),V("I'd like a window seat.","Quisiera un asiento de ventanilla.","🪟"),V("I lost my luggage.","Perdí mi equipaje.","🧳"),V("What time is check-out?","¿A qué hora es el check-out?","🕚"),V("A round-trip ticket, please.","Un pasaje de ida y vuelta, por favor.","🎫")],
+  dialogs:[["What's the purpose of your visit?","I'm here on vacation.",["I'm a purpose.","Yes, I visit.","My visit is purple."],"¿Cuál es el motivo de su visita?"],["How long are you staying?","For two weeks.",["Since two weeks.","I'm very long.","Two meters."],"¿Cuánto tiempo se queda?"],["Do you have anything to declare?","No, nothing.",["Yes, I declare you.","I'm declaring.","No, I don't have a passport."],"¿Tiene algo para declarar?"],["Window or aisle?","Window, please.",["Yes, please.","A window is glass.","I'm aisle."],"¿Ventanilla o pasillo?"]]};
+M.phone={name:"Teléfono y mails",ic:"📱",tip:"En un mail formal empezá con <b>Dear…</b> y cerrá con <b>Best regards</b> o <b>Kind regards</b>.",
+  items:[V("Hello, this is Laura.","Hola, habla Laura.","☎️"),V("Can I speak to Mr. Smith?","¿Puedo hablar con el Sr. Smith?","🙋"),V("Hold on, please.","Un momento, por favor.","⏸️"),V("Can I leave a message?","¿Puedo dejar un mensaje?","📝"),V("I'll call you back.","Te llamo después.","🔁"),V("Sorry, I can't hear you.","Perdón, no te escucho.","🔇"),V("Dear Sir or Madam,","Estimado/a señor/a:","✉️"),V("Looking forward to hearing from you.","Quedo a la espera de su respuesta.","📬")],
+  dialogs:[["Hello, can I speak to Ana?","Sorry, she's not here. Can I take a message?",["Yes, you can speak.","I'm not Ana, I'm here.","Hello, I'm a phone."],"Hola, ¿puedo hablar con Ana?"],["Who's calling, please?","It's Martín, her classmate.",["I'm calling.","Yes, please.","Calling is fun."],"¿Quién habla?"],["The line is busy.","OK, I'll call back later.",["OK, I'm busy too.","Yes, the line.","I like lines."],"La línea está ocupada."]]};
+M.smalltalk={name:"Charla y presentaciones",ic:"🤝",
+  items:[V("Where are you from?","¿De dónde sos?","🌎"),V("I'm from Argentina.","Soy de Argentina.","🧉"),V("What do you do?","¿A qué te dedicás?","💼"),V("I work as a teacher.","Trabajo de docente.","🧑‍🏫"),V("How's it going?","¿Cómo va?","🙂"),V("Long time no see!","¡Tanto tiempo!","🤗"),V("What do you do for fun?","¿Qué hacés para divertirte?","🎉"),V("It was nice talking to you.","Fue un gusto charlar con vos.","💬")],
+  dialogs:[["How's it going?","Pretty good, thanks. And you?",["It's going to the park.","I'm going.","Yes, it is."],"¿Cómo va?"],["What do you do?","I'm a nurse. I work at a hospital.",["I do my homework.","I do what I do.","Yes, I do."],"¿A qué te dedicás?"],["Where are you from?","I'm from Córdoba, in Argentina.",["I'm from home now.","From 9 to 5.","I'm fine."],"¿De dónde sos?"],["Nice to meet you!","Nice to meet you too!",["Yes, I'm nice.","You're welcome.","Me too meet."],"¡Encantado de conocerte!"]]};
+M.plans={name:"Planes e invitaciones",ic:"📅",
+  items:[V("Are you free on Saturday?","¿Estás libre el sábado?","🗓️"),V("Would you like to go to the cinema?","¿Te gustaría ir al cine?","🎬"),V("Let's meet at six.","Encontrémonos a las seis.","🕕"),V("That sounds great!","¡Suena genial!","🤩"),V("Sorry, I can't. I'm busy.","Perdón, no puedo. Estoy ocupado.","😕"),V("How about Sunday?","¿Qué tal el domingo?","🤔"),V("See you there!","¡Nos vemos ahí!","👋"),V("What are you doing tonight?","¿Qué hacés esta noche?","🌙")],
+  dialogs:[["Would you like to come to my party?","I'd love to! Thanks.",["Yes, I like parties.","I would like you.","No, I'm a party."],"¿Te gustaría venir a mi fiesta?"],["Shall we meet at 7?","Perfect, see you then.",["Yes, we shall.","7 is a number.","I meet."],"¿Nos encontramos a las 7?"],["Are you free tomorrow?","Sorry, I'm busy. How about Friday?",["Yes, I'm free of charge.","No, I'm expensive.","Tomorrow is free."],"¿Estás libre mañana?"]]};
+M.opinions={name:"Opinar y debatir",ic:"🗣️",tip:"Ojo: se dice <b>I agree</b>, nunca “I'm agree”. Para suavizar un desacuerdo: <b>I see your point, but…</b>",
+  items:[V("I think that…","Creo que…","💭"),V("In my opinion,…","En mi opinión,…","🧠"),V("I agree with you.","Estoy de acuerdo con vos.","👍"),V("I don't agree.","No estoy de acuerdo.","👎"),V("That's a good point.","Es un buen punto.","🎯"),V("I'm not sure about that.","No estoy seguro de eso.","🤷"),V("On the other hand,…","Por otro lado,…","⚖️"),V("What do you think?","¿Vos qué pensás?","❓")],
+  dialogs:[["I think homework should be banned.","I see your point, but I don't agree.",["I think yes homework.","You're homework.","I banned it."],"Creo que la tarea debería prohibirse."],["What do you think about this movie?","In my opinion, it's a bit boring.",["I think about it.","The movie thinks.","Yes, I do."],"¿Qué pensás de esta película?"],["Football is the best sport.","Absolutely! I totally agree.",["I'm agree.","Yes, I'm the best.","I agree you."],"El fútbol es el mejor deporte."]]};
+M.polite={name:"Pedir con cortesía",ic:"🙏",tip:"<b>Would you mind + -ing?</b> = ¿te molestaría…? Si aceptás, respondés <b>Not at all</b> (¡para nada!).",
+  items:[V("Could you help me, please?","¿Me podrías ayudar, por favor?","🙏"),V("Would you mind opening the window?","¿Te molestaría abrir la ventana?","🪟"),V("Do you mind if I sit here?","¿Te molesta si me siento acá?","🪑"),V("I'm sorry to bother you.","Perdón por molestarte.","😅"),V("Thank you so much!","¡Muchísimas gracias!","💖"),V("You're welcome.","De nada.","😊"),V("Excuse me…","Disculpe…","✋"),V("No problem at all.","No hay ningún problema.","👌")],
+  dialogs:[["Thank you so much!","You're welcome!",["You're thank.","Yes, much.","Me too."],"¡Muchas gracias!"],["Would you mind closing the door?","Not at all. Here you go.",["Yes, I mind the door.","I'm closing you.","Door is closed yesterday."],"¿Te molestaría cerrar la puerta?"],["Sorry, I'm late.","Don't worry, no problem.",["Yes, you're late.","Me too sorry.","Late is good."],"Perdón, llegué tarde."]]};
+M.doctor={name:"En el médico",ic:"🩺",
+  items:[V("I have a headache.","Me duele la cabeza.","🤕"),V("I have a sore throat.","Me duele la garganta.","😷"),V("I have a fever.","Tengo fiebre.","🌡️"),V("My stomach hurts.","Me duele la panza.","🤢"),V("I feel dizzy.","Estoy mareado.","😵‍💫"),V("I need to see a doctor.","Necesito ver a un médico.","🩺"),V("Take this medicine twice a day.","Tomá este remedio dos veces por día.","💊"),V("Get well soon!","¡Que te mejores!","💐")],
+  dialogs:[["What's the matter?","I have a terrible headache.",["The matter is solid.","I'm a doctor.","Yes, it matters."],"¿Qué te pasa?"],["How long have you felt like this?","Since yesterday.",["For yesterday.","Very long.","I feel like a doctor."],"¿Hace cuánto te sentís así?"],["I've got a cold.","Oh no! Get well soon!",["Me too cold.","Break a leg!","Congratulations!"],"Estoy resfriado."]]};
+
+/* ---------- CUMBRE AVANZADA (B2) ---------- */
+M.cond2={name:"Segundo condicional",ic:"💭",tip:"Situaciones imaginarias: <b>If + pasado simple, would + verbo</b>. If I had money, I would travel. Con to be se usa <b>were</b>: If I were you…",
+  blanks:[["If I ___ rich, I would buy a house.","were",["am","will be"],"Si fuera rico, me compraría una casa."],["If she studied more, she ___ pass.","would",["will","is"],"Si estudiara más, aprobaría."],["What would you do if you ___ a million dollars?","won",["win","would win"],"¿Qué harías si ganaras un millón de dólares?"],["If I were you, I ___ call her.","would",["will","am"],"Yo que vos, la llamaría."],["If we ___ a car, we would drive to the beach.","had",["have","would have"],"Si tuviéramos auto, iríamos a la playa."],["I would help you if I ___ time.","had",["have","would have"],"Te ayudaría si tuviera tiempo."]],
+  correct:[["If I were you, I would say sorry.",["If I would be you, I would say sorry.","If I am you, I would say sorry.","If I were you, I will say sorry."],"Yo que vos, pediría perdón."],["If I had time, I would help you.",["If I would have time, I would help you.","If I have time, I would help you.","If I had time, I will help you."],"Si tuviera tiempo, te ayudaría."]]};
+M.cond3={name:"Tercer condicional",ic:"⏪",tip:"Pasado imaginario (lo que no pasó): <b>If + had + participio, would have + participio</b>. If I had studied, I would have passed.",
+  blanks:[["If I had studied, I would have ___ the exam.","passed",["pass","passing"],"Si hubiera estudiado, habría aprobado."],["If she ___ left earlier, she wouldn't have missed the bus.","had",["has","would"],"Si hubiera salido antes, no habría perdido el colectivo."],["We would ___ come if you had invited us.","have",["had","has"],"Habríamos venido si nos hubieras invitado."],["If it hadn't rained, we ___ have played.","would",["will","had"],"Si no hubiera llovido, habríamos jugado."],["If you had told me, I would have ___ you.","helped",["help","helping"],"Si me hubieras dicho, te habría ayudado."]],
+  correct:[["If I had known, I would have called you.",["If I would have known, I would have called you.","If I knew, I would have call you.","If I had known, I will have called you."],"Si hubiera sabido, te habría llamado."],["She would have won if she had trained more.",["She would won if she had trained more.","She will have won if she trained more.","She would have win if she had trained more."],"Habría ganado si hubiera entrenado más."]]};
+M.passive={name:"Voz pasiva",ic:"🏗️",tip:"<b>be + participio</b>: English <b>is spoken</b> here. The Mona Lisa <b>was painted</b> by Leonardo. Quién lo hizo va con <b>by</b>.",
+  pairs:[["write","written"],["build","built"],["steal","stolen"],["make","made"],["speak","spoken"],["break","broken"],["paint","painted"]],pairHint:"¿Cuál es el participio?",
+  blanks:[["English ___ spoken all over the world.","is",["are","was"],"El inglés se habla en todo el mundo."],["The Mona Lisa was ___ by Leonardo da Vinci.","painted",["paint","painting"],"La Mona Lisa fue pintada por Leonardo da Vinci."],["These cars ___ made in Japan.","are",["is","be"],"Estos autos se fabrican en Japón."],["The thief was caught ___ the police.","by",["for","from"],"El ladrón fue atrapado por la policía."],["The bridge ___ built in 1990.","was",["were","is"],"El puente fue construido en 1990."],["A new school will ___ opened next year.","be",["been","is"],"Una nueva escuela será inaugurada el año que viene."],["My phone has been ___!","stolen",["stole","steal"],"¡Me robaron el teléfono!"]]};
+M.reported={name:"Estilo indirecto",ic:"🗨️",noOrder:true,tip:"Al contar lo que alguien dijo, el verbo “retrocede”: “I <b>am</b> tired” → She said she <b>was</b> tired. <b>will → would</b>, <b>can → could</b>. <b>tell</b> + persona (She told me…), <b>say</b> sin persona.",
+  pairs:[["am / is","was"],["will","would"],["can","could"],["like","liked"],["have","had"]],pairHint:"¿Cómo retrocede el verbo?",
+  blanks:[["“I am tired.” → She said she ___ tired.","was",["is","were"],"Dijo que estaba cansada."],["“I will call you.” → He said he ___ call me.","would",["will","can"],"Dijo que me llamaría."],["“I can swim.” → She said she ___ swim.","could",["can","would"],"Dijo que sabía nadar."],["“I like pizza.” → Tom said he ___ pizza.","liked",["likes","like"],"Tom dijo que le gustaba la pizza."],["She told ___ that she was busy.","me",["to me","I"],"Me dijo que estaba ocupada."],["He asked me where I ___.","lived",["live","did live"],"Me preguntó dónde vivía."]]};
+M.relative={name:"Who, which, where",ic:"🔗",tip:"<b>who</b> = personas · <b>which / that</b> = cosas · <b>where</b> = lugares · <b>whose</b> = cuyo (de quién).",
+  blanks:[["The girl ___ lives next door is my friend.","who",["which","where"],"La chica que vive al lado es mi amiga."],["This is the book ___ I told you about.","which",["who","where"],"Este es el libro del que te hablé."],["That's the restaurant ___ we had dinner.","where",["which","who"],"Ese es el restaurante donde cenamos."],["The man ___ car was stolen called the police.","whose",["who","which"],"El hombre cuyo auto fue robado llamó a la policía."],["A doctor is a person ___ helps sick people.","who",["which","whose"],"Un médico es una persona que ayuda a los enfermos."],["I like movies ___ make me laugh.","that",["who","where"],"Me gustan las películas que me hacen reír."]]};
+M.gerund={name:"Gerundio o infinitivo",ic:"🔀",tip:"<b>enjoy, finish, avoid, mind</b> + <b>-ing</b>. <b>want, decide, hope, need, plan</b> + <b>to</b>. Después de preposición siempre <b>-ing</b> (good at drawing).",
+  blanks:[["I enjoy ___ to music.","listening",["to listen","listen"],"Disfruto escuchar música."],["She wants ___ a doctor.","to be",["being","be"],"Quiere ser médica."],["He finished ___ his homework.","doing",["to do","do"],"Terminó de hacer la tarea."],["We decided ___ a new car.","to buy",["buying","buy"],"Decidimos comprar un auto nuevo."],["I'm good at ___ pictures.","drawing",["to draw","draw"],"Soy bueno dibujando."],["Do you mind ___ the door?","closing",["to close","close"],"¿Te molesta cerrar la puerta?"],["They hope ___ the match.","to win",["winning","win"],"Esperan ganar el partido."],["Avoid ___ too much sugar.","eating",["to eat","eat"],"Evitá comer demasiada azúcar."]]};
+M.phrasal={name:"Phrasal verbs",ic:"🧩",noOrder:true,tip:"Los <b>phrasal verbs</b> son verbo + partícula y cambian el significado: <b>look</b> (mirar) → <b>look for</b> (buscar), <b>look after</b> (cuidar).",
+  items:[V("get up","levantarse","🛏️"),V("turn on","encender","💡"),V("turn off","apagar","🔌"),V("look for","buscar","🔍"),V("give up","rendirse","🏳️"),V("find out","averiguar","🕵️"),V("pick up","recoger / levantar","📦"),V("put on","ponerse (ropa)","🧥"),V("take off","despegar / sacarse","🛫"),V("look after","cuidar","👶"),V("run out of","quedarse sin","⛽"),V("come back","volver","🔙")],
+  extra(){const all=this.items.map(i=>i.en);
+    return [["Can you ___ the TV? I'm trying to sleep.","¿Podés apagar la tele? Quiero dormir.","turn off"],["Don't ___! You can do it!","¡No te rindas! ¡Vos podés!","give up"],["Could you ___ my dog while I'm away?","¿Podrías cuidar a mi perro mientras no estoy?","look after"],["The plane will ___ in ten minutes.","El avión va a despegar en diez minutos.","take off"],["I need to ___ what time the train leaves.","Necesito averiguar a qué hora sale el tren.","find out"],["We always ___ at 7 a.m.","Siempre nos levantamos a las 7.","get up"],["Please ___ the lights. It's dark.","Prendé las luces, por favor. Está oscuro.","turn on"]].map((x,i)=>fill("ph"+i,"Completá",x[0],x[1],x[2],all));}};
+M.linking={name:"Conectores",ic:"🧵",tip:"<b>because</b> porque · <b>so</b> así que · <b>but</b> pero · <b>although</b> aunque · <b>however</b> sin embargo · <b>unless</b> a menos que · <b>despite</b> a pesar de (+ sustantivo o -ing).",
+  items:[{en:"because",es:"porque"},{en:"so",es:"así que"},{en:"but",es:"pero"},{en:"although",es:"aunque"},{en:"however",es:"sin embargo"},{en:"therefore",es:"por lo tanto"},{en:"unless",es:"a menos que"},{en:"while",es:"mientras"},{en:"in addition",es:"además"},{en:"despite",es:"a pesar de"}],
+  extra(){return [["I stayed home ___ I was sick.","Me quedé en casa porque estaba enfermo.","because",["because","so","although","unless"]],["It was raining, ___ we took a taxi.","Llovía, así que tomamos un taxi.","so",["so","because","although","despite"]],["The test was hard. ___, I passed.","La prueba fue difícil. Sin embargo, aprobé.","However",["However","Because","So","Unless"]],["You won't pass ___ you study.","No vas a aprobar a menos que estudies.","unless",["unless","because","so","despite"]],["___ the rain, we played football.","A pesar de la lluvia, jugamos al fútbol.","Despite",["Despite","Although","Because","Unless"]],["I like tea, ___ I don't like coffee.","Me gusta el té, pero no el café.","but",["but","so","because","unless"]],["___ it was cold, we went to the beach.","Aunque hacía frío, fuimos a la playa.","Although",["Although","Despite","However","So"]]].map((x,i)=>fill("lk"+i,"Elegí el conector",x[0],x[1],x[2],x[3]));}};
+M.falsefriends={name:"Falsos amigos",ic:"⚠️",tip:"Parecen palabras en español… ¡pero significan otra cosa! <b>Library</b> no es librería, <b>embarrassed</b> no es embarazada, <b>actually</b> no es actualmente.",
+  items:[{en:"actually",es:"en realidad"},{en:"embarrassed",es:"avergonzado/a"},{en:"library",es:"biblioteca"},{en:"carpet",es:"alfombra"},{en:"sensible",es:"sensato/a"},{en:"realize",es:"darse cuenta"},{en:"exit",es:"salida"},{en:"pretend",es:"fingir"},{en:"attend",es:"asistir a"},{en:"success",es:"éxito"},{en:"fabric",es:"tela"},{en:"college",es:"universidad / instituto"}],
+  extra(){return [["library","biblioteca",["librería","libro","libertad"]],["embarrassed","avergonzado/a",["embarazada","enojado/a","aburrido/a"]],["carpet","alfombra",["carpeta","carpa","cartera"]],["exit","salida",["éxito","examen","entrada"]],["actually","en realidad",["actualmente","a veces","nunca"]],["sensible","sensato/a",["sensible","sentimental","sencillo/a"]],["success","éxito",["suceso","sucio","suerte"]],["fabric","tela",["fábrica","fabuloso","fábula"]]].map((x,i)=>({key:"ff"+i,type:"choice",cat:"extra",hint:"¡Cuidado! ¿Qué significa?",big:x[0],answer:x[1],options:shuffle([x[1],...x[2]]),say:x[0],sayFirst:true}));}};
+M.idioms={name:"Expresiones (idioms)",ic:"🎭",tip:"Los <b>idioms</b> no se traducen palabra por palabra. “It's raining cats and dogs” no tiene nada que ver con gatos: ¡llueve a cántaros!",
+  items:[V("It's raining cats and dogs.","Llueve a cántaros.","🌧️"),V("Break a leg!","¡Mucha suerte! (antes de un show)","🎭"),V("It's a piece of cake.","Es pan comido.","🍰"),V("I'm feeling under the weather.","Me siento medio mal.","🤒"),V("Hit the books.","Ponerse a estudiar.","📚"),V("Once in a blue moon.","Muy de vez en cuando.","🌕"),V("It costs an arm and a leg.","Cuesta un ojo de la cara.","💰"),V("Break the ice.","Romper el hielo.","🧊")],
+  dialogs:[["How was the exam?","A piece of cake! It was really easy.",["A piece of cake, I'm hungry.","Raining cats and dogs.","Break a leg."],"¿Cómo estuvo el examen?"],["I have my first concert tonight!","Break a leg!",["Break the ice!","Get well soon!","Hit the books!"],"¡Hoy tengo mi primer concierto!"],["Do you go to the cinema often?","Once in a blue moon.",["It costs an arm and a leg.","Under the weather.","A piece of cake."],"¿Vas seguido al cine?"],["That phone is so expensive!","Yes, it costs an arm and a leg.",["Yes, it's a piece of cake.","Yes, break a leg.","Yes, once in a blue moon."],"¡Ese teléfono es carísimo!"]]};
+M.wish={name:"I wish / If only",ic:"🌠",tip:"<b>I wish + pasado</b> = deseo sobre el presente (I wish I had a dog). <b>I wish + had + participio</b> = arrepentimiento (I wish I had studied). <b>I wish you would…</b> = queja.",
+  blanks:[["I wish I ___ taller.","were",["am","will be"],"Ojalá fuera más alto."],["I wish I ___ a dog.","had",["have","would have"],"Ojalá tuviera un perro."],["She wishes she ___ studied harder.","had",["has","would"],"Ella desearía haber estudiado más."],["I wish you ___ stop making noise!","would",["will","are"],"¡Ojalá dejaras de hacer ruido!"],["If only I ___ speak French.","could",["can","will"],"Ojalá pudiera hablar francés."],["I wish I hadn't ___ that.","said",["say","says"],"Ojalá no hubiera dicho eso."]]};
+M.tags={name:"Question tags",ic:"🏷️",tip:"Son el “¿no?” del final. Frase afirmativa → tag negativo (You're Argentinian, <b>aren't you?</b>). Frase negativa → tag positivo (She can't swim, <b>can she?</b>).",
+  blanks:[["You're from Córdoba, ___ you?","aren't",["are","don't"],"Sos de Córdoba, ¿no?"],["She can't swim, ___ she?","can",["can't","does"],"Ella no sabe nadar, ¿no?"],["They live here, ___ they?","don't",["do","aren't"],"Ellos viven acá, ¿no?"],["He didn't call, ___ he?","did",["didn't","does"],"No llamó, ¿no?"],["It's a nice day, ___ it?","isn't",["is","doesn't"],"Es un lindo día, ¿no?"],["You will come, ___ you?","won't",["will","don't"],"Vas a venir, ¿no?"],["Let's go, ___ we?","shall",["will","don't"],"Vamos, ¿dale?"]]};
+M.pperfcont={name:"Presente perfecto continuo",ic:"⌛",tip:"<b>have / has been + -ing</b> = algo que empezó en el pasado y sigue (o recién terminó): I <b>have been waiting</b> for an hour.",
+  blanks:[["I have been ___ for an hour!","waiting",["wait","waited"],"¡Hace una hora que estoy esperando!"],["She has ___ studying English since March.","been",["be","being"],"Estudia inglés desde marzo."],["How long have you ___ working here?","been",["be","was"],"¿Hace cuánto trabajás acá?"],["It ___ been raining all day.","has",["have","is"],"Estuvo lloviendo todo el día."],["Why are you wet? I've been ___.","swimming",["swim","swam"],"¿Por qué estás mojado? Estuve nadando."],["They have been playing ___ two hours.","for",["since","during"],"Están jugando hace dos horas."]]};
+M.reading={name:"Lectura: textos cortos",ic:"📖",tip:"Leé con calma el texto completo y después respondé. ¡No hace falta entender todas las palabras para captar la idea!",
+  passages:[
+   {en:"Mia is 14 and lives in a small town near the mountains. Every morning she gets up at 6:30 because her school is far away. She takes the bus with her best friend, Leo. After school, she plays volleyball and then does her homework. On weekends, she loves hiking with her dad.",
+    es:"Mia tiene 14 años y vive en un pueblo cerca de las montañas. Todas las mañanas se levanta a las 6:30 porque su escuela queda lejos. Toma el colectivo con su mejor amigo, Leo. Después de la escuela juega al vóley y hace la tarea. Los fines de semana le encanta hacer senderismo con su papá.",
+    qs:[["Why does Mia get up early?","Because her school is far away.",["Because she plays volleyball.","Because she loves hiking.","Because Leo calls her."]],["Who does she go to school with?","Her best friend, Leo.",["Her dad.","Her teacher.","Nobody."]],["What does she do on weekends?","She goes hiking with her dad.",["She plays volleyball.","She takes the bus.","She does homework all day."]]]},
+   {en:"Last summer, Tom went to London for the first time. He visited the British Museum and took a boat on the River Thames. It rained almost every day, but he didn't mind. The best part was a musical in the West End. He has already decided to go back next year.",
+    es:"El verano pasado Tom fue a Londres por primera vez. Visitó el Museo Británico y paseó en barco por el Támesis. Llovió casi todos los días, pero no le importó. Lo mejor fue un musical en el West End. Ya decidió volver el año que viene.",
+    qs:[["Had Tom been to London before?","No, it was his first time.",["Yes, many times.","Yes, last winter.","We don't know."]],["What was the weather like?","It rained almost every day.",["It was very hot.","It snowed.","It was sunny every day."]],["What is Tom going to do?","Go back to London next year.",["Never travel again.","Move to London.","Visit the museum tomorrow."]]]},
+   {en:"Dear Ms. Brown, I am writing to apply for the position of shop assistant. I have worked in a bookshop for two years, so I have experience with customers. I speak English and Spanish fluently. I would be grateful if you could consider my application. Best regards, Lucía Pérez",
+    es:"Estimada Sra. Brown: Le escribo para postularme al puesto de vendedora. Trabajé dos años en una librería, así que tengo experiencia con clientes. Hablo inglés y español con fluidez. Le agradecería que considerara mi postulación. Saludos cordiales, Lucía Pérez",
+    qs:[["Why is Lucía writing?","To apply for a job.",["To buy a book.","To complain about a shop.","To invite Ms. Brown to a party."]],["How long has she worked in a bookshop?","For two years.",["Since two years.","For two months.","She has never worked."]],["What kind of text is it?","A formal letter.",["A text to a friend.","A shopping list.","A birthday card."]]]},
+   {en:"Scientists say that sleeping well is very important for teenagers. If you don't sleep enough, you might feel tired and find it hard to concentrate at school. Experts recommend eight to ten hours a night and avoiding screens before going to bed.",
+    es:"Los científicos dicen que dormir bien es muy importante para los adolescentes. Si no dormís lo suficiente, podés sentirte cansado y que te cueste concentrarte en la escuela. Los expertos recomiendan de ocho a diez horas por noche y evitar las pantallas antes de dormir.",
+    qs:[["How many hours should teenagers sleep?","Eight to ten hours.",["Five hours.","Twelve hours or more.","It doesn't matter."]],["What should you avoid before bed?","Using screens.",["Reading books.","Drinking water.","Sleeping."]],["What can happen if you don't sleep enough?","You might find it hard to concentrate.",["You will grow taller.","You will feel more energetic.","Nothing happens."]]]}
+  ]};
+
+const WORLDS=[
+ {name:"Isla de las Palabras",ic:"🏝️",color:"sky",lvl:"Inicial",mods:["colors","numbers","body","things","animals","food","clothes","family"]},
+ {name:"Valle del Tiempo",ic:"⏳",color:"sun",lvl:"Inicial",mods:["days","months","seasons","weather","clock"]},
+ {name:"Pueblo de la Vida Diaria",ic:"🏡",color:"leaf",lvl:"Inicial",mods:["routine","freq","house","greet","school","me"]},
+ {name:"Ciudad del Básico",ic:"🏙️",color:"teal",lvl:"A1",mods:["tobe","possess","therebe","can","havegot","wh","jobs","places","hobbies","opposites"]},
+ {name:"Montaña de la Gramática",ic:"⛰️",color:"grape",lvl:"A1–A2",mods:["prep","psimple","herday","pcont","will","goingto","cond"]},
+ {name:"Castillo del Pasado",ic:"🏰",color:"tomato",lvl:"A2",mods:["waswere","regular","irregular","didq","pastcont","usedto"]},
+ {name:"Bosque Intermedio",ic:"🌲",color:"navy",lvl:"B1",mods:["compar","superl","someany","pperf1","pperf2","modals1","modals2"]},
+ {name:"Puerto de la Conversación",ic:"⚓",color:"pink",lvl:"Comunicación",mods:["smalltalk","restaurant","shopping","directions","travel","phone","plans","opinions","polite","doctor"]},
+ {name:"Cumbre Avanzada",ic:"🏔️",color:"ember",lvl:"B2",mods:["cond2","cond3","passive","reported","relative","gerund","phrasal","linking","falsefriends","idioms","wish","tags","pperfcont","reading"]}
+];
+const MODS=[];
+WORLDS.forEach(w=>w.mods=w.mods.map(id=>{const m=M[id];m.id=id;m.world=w;m.color=w.color;MODS.push(m);return m;}));
+
+const AVATARS=[["🐣",0],["🐶",0],["🐱",30],["🐰",50],["🦊",80],["🐼",100],["🐸",120],["🐧",150],["🦁",200],["🐵",250],["🐯",300],["🤖",400],["🦄",500],["🐲",700],["👑",1000]];
+const TITLES=[[1,"Explorador/a novato"],[3,"Explorador/a"],[5,"Aventurero/a"],[8,"Capitán/a"],[12,"Héroe del inglés"],[16,"Leyenda"]];
+
+/* =================== STORAGE =================== */
+const KEY="aventura-english-v2";
+let prog={stars:{},coins:0,xp:0,avatar:"🐣",owned:["🐣","🐶"],name:"",streak:{last:"",count:0},chest:"",blitzBest:0,memoBest:0,won:false,seen:{}};
+try{const s=localStorage.getItem(KEY);if(s)prog=Object.assign(prog,JSON.parse(s));else{const o=localStorage.getItem("aventura-english-v1");if(o){const p=JSON.parse(o);if(p.stars){prog.stars=p.stars;prog.coins=Object.values(p.stars).reduce((a,b)=>a+b,0)*10;}}}}catch(e){}
+if(prog.stars.myday){prog.stars.routine=Math.max(prog.stars.routine||0,prog.stars.myday);delete prog.stars.myday;}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(prog));}catch(e){}}
 
-/* ============ SOUND + VOICE ============ */
-let soundOn=true, actx=null;
+/* =================== SOUND + VOICE =================== */
+let soundOn=true,actx=null;
 const canSpeak=("speechSynthesis" in window)&&typeof SpeechSynthesisUtterance!=="undefined";
 let enVoice=null;
 function loadVoice(){try{const v=speechSynthesis.getVoices();enVoice=v.find(x=>/en[-_]US/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null;}catch(e){}}
 if(canSpeak){loadVoice();try{speechSynthesis.onvoiceschanged=loadVoice;}catch(e){}}
 function speak(t){if(!soundOn||!canSpeak||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.85;if(enVoice)u.voice=enVoice;speechSynthesis.speak(u);}catch(e){}}
-function tone(freqs,dur,type){if(!soundOn)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();let t=actx.currentTime;freqs.forEach(f=>{const o=actx.createOscillator(),g=actx.createGain();o.type=type||"triangle";o.frequency.value=f;g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+dur);t+=dur*.8;});}catch(e){}}
-const sfx={ok:()=>tone([660,880],.14),no:()=>tone([220,180],.2,"sawtooth"),win:()=>tone([523,659,784,1046],.16)};
-$("soundBtn").onclick=function(){soundOn=!soundOn;this.textContent=soundOn?"🔊":"🔇";this.setAttribute("aria-pressed",soundOn);if(!soundOn&&canSpeak)try{speechSynthesis.cancel();}catch(e){}};
+function hush(){if(canSpeak)try{speechSynthesis.cancel();}catch(e){}}
+function tone(freqs,dur,type,vol){if(!soundOn)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();let t=actx.currentTime;freqs.forEach(f=>{const o=actx.createOscillator(),g=actx.createGain();o.type=type||"triangle";o.frequency.value=f;g.gain.setValueAtTime(vol||.18,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+dur);t+=dur*.8;});}catch(e){}}
+const sfx={ok:n=>tone([600+(n||0)*40,800+(n||0)*60],.13),no:()=>tone([220,170],.2,"sawtooth",.12),win:()=>tone([523,659,784,1046,1318],.15),coin:()=>tone([988,1319],.08,"square",.08),pair:()=>tone([700,1050],.1),flip:()=>tone([420],.05,"sine",.1),lvl:()=>tone([392,523,659,784,1046],.12,"square",.1)};
+$("soundBtn").onclick=function(){soundOn=!soundOn;this.textContent=soundOn?"🔊":"🔇";this.setAttribute("aria-pressed",soundOn);if(!soundOn)hush();};
 
-/* ============ PROGRESS ============ */
+/* =================== PROGRESS / REWARDS =================== */
 const topicStars=id=>prog.stars[id]||0;
-const levelDone=L=>L.topics.filter(t=>topicStars(t.id)>0).length;
-const needFor=L=>Math.ceil(L.topics.length/2);
-function unlocked(n){if(n===1||prog.teacher)return true;const P=LEVELS[n-2];return levelDone(P)>=needFor(P);}
-function starsHtml(n,max){let s="";for(let i=0;i<max;i++)s+=i<n?"★":'<span class="off">★</span>';return s;}
-function updateTotal(){$("totalStars").textContent=Object.values(prog.stars).reduce((a,b)=>a+b,0);}
+const doneCount=()=>MODS.filter(m=>topicStars(m.id)>0).length;
+const totalStars=()=>MODS.reduce((a,m)=>a+topicStars(m.id),0);
+function starsHtml(n,max,cls){let s="";for(let i=0;i<max;i++)s+=i<n?'<span'+(cls?' class="'+cls+'" style="animation-delay:'+(i*.18)+'s"':'')+'>★</span>':'<span class="off">★</span>';return s;}
+function lvlOf(xp){let l=1;while(xp>=xpFor(l+1))l++;return l;}
+function xpFor(l){return 60*(l-1)*l;} // 0,120,360,720…
+function titleOf(l){let t=TITLES[0][1];TITLES.forEach(([n,s])=>{if(l>=n)t=s;});return t;}
+function today(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function yesterday(){const d=new Date();d.setDate(d.getDate()-1);return today(d);}
+function streakNow(){return (prog.streak.last===today()||prog.streak.last===yesterday())?prog.streak.count:0;}
+function bumpStreak(){const t=today();if(prog.streak.last===t)return false;prog.streak.count=prog.streak.last===yesterday()?prog.streak.count+1:1;prog.streak.last=t;return true;}
+function addCoins(n){prog.coins+=n;bump("coinPill");}
+function addXp(n){const before=lvlOf(prog.xp);prog.xp+=n;const after=lvlOf(prog.xp);return after>before?after:0;}
+function bump(id){const e=$(id);e.classList.remove("bump");void e.offsetWidth;e.classList.add("bump");}
+function topbar(){$("tCoins").textContent=prog.coins;$("tStars").textContent=totalStars();$("tStreak").textContent=streakNow();}
+let toastT=null;
+function toast(msg){document.querySelectorAll(".toast").forEach(t=>t.remove());const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),2600);}
+function floaty(txt,el,color){const r=(el||document.body).getBoundingClientRect();const f=document.createElement("div");f.className="floaty";f.textContent=txt;if(color)f.style.color=color;f.style.left=(r.left+r.width/2-20)+"px";f.style.top=(r.top+Math.min(r.height/2,60))+"px";document.body.appendChild(f);setTimeout(()=>f.remove(),1000);}
 
-/* ============ NAV ============ */
-const screens=["home","level","learn","play","result"];
-let cur="home", curLevel=null, curTopic=null;
-function show(name){screens.forEach(s=>$("scr-"+s).hidden=s!==name);cur=name;$("backBtn").hidden=name==="home";window.scrollTo(0,0);}
-$("backBtn").onclick=()=>{if(canSpeak)try{speechSynthesis.cancel();}catch(e){}
-  if(cur==="level")goHome();else if(cur==="learn"||cur==="result"||cur==="play")openLevel(curLevel);};
+/* =================== NAV =================== */
+const SCREENS=["home","learn","play","result","blitz","memo","shop","album","win"];
+let cur="home",curTopic=null;
+function show(name){SCREENS.forEach(s=>$("scr-"+s).hidden=s!==name);cur=name;$("backBtn").hidden=name==="home";window.scrollTo(0,0);topbar();}
+$("backBtn").onclick=()=>{hush();stopBlitz();if(cur==="play"||cur==="result")openLearn(curTopic);else goHome();};
 
-/* ============ HOME ============ */
-function goHome(){renderMap();show("home");}
-function renderMap(){
-  const m=$("map");m.innerHTML="";
-  LEVELS.forEach(L=>{
-    const open=unlocked(L.n), b=document.createElement("button");
-    b.className="stop";b.style.setProperty("--c","var(--"+L.color+")");b.style.setProperty("--d","var(--"+L.color+"-deep)");
-    const got=L.topics.reduce((a,t)=>a+topicStars(t.id),0), max=L.topics.length*3;
-    b.innerHTML='<div class="num">'+(open?L.n:"🔒")+'</div><div class="stop-body"><p>Nivel '+L.n+'</p><h3>'+L.name+'</h3><p>'+L.sub+'</p>'+
-      (open?'<div class="stars" aria-label="'+got+' de '+max+' estrellas">'+got+' / '+max+' ★</div>':'<div class="lock">Completá '+needFor(LEVELS[L.n-2])+' temas del nivel '+(L.n-1)+' para abrirlo</div>')+'</div>';
-    if(!open)b.disabled=true;else b.onclick=()=>openLevel(L);
-    m.appendChild(b);
+/* =================== HOME =================== */
+const BUBBLES=["Hi! Soy Pipo. Todos los módulos están abiertos: ¡elegí el que quieras!","¿Ya sabés lo básico? Probá el Puerto de la Conversación ⚓ o la Cumbre Avanzada 🏔️","Completá un nivel entero para ganar una medalla 🏅 y 50 monedas.","Completá TODOS los módulos para ganar la Gran Copa 🏆","¿Sabías? Con 3 estrellas la figurita se vuelve dorada ✨","Jugá todos los días para mantener tu racha 🔥","Juntá monedas 🪙 y comprá personajes en la tienda.","Let's play! ¡Vamos a jugar!"];
+function goHome(){renderHome();show("home");}
+function renderHome(){
+  $("homeBubble").textContent=prog.won?"¡Ganaste la Copa! 🏆 Ahora buscá las 3 estrellas en todo.":rnd(BUBBLES);
+  // player
+  const l=lvlOf(prog.xp),a=xpFor(l),b=xpFor(l+1);
+  $("avBig").textContent=prog.avatar;$("pName").textContent=(prog.name||"¡Hola, explorador/a!")+" "+(prog.name?"":"");
+  $("pTitle").textContent="Nivel "+l+" · "+titleOf(l)+" · "+(prog.xp-a)+" / "+(b-a)+" XP";
+  $("pXp").style.width=Math.round((prog.xp-a)/(b-a)*100)+"%";
+  // cup
+  const d=doneCount(),n=MODS.length,left=n-d;
+  $("cupCard").classList.toggle("won",d===n);
+  $("cupBar").style.width=Math.round(d/n*100)+"%";$("cupNum").textContent=d+" / "+n+" módulos";
+  $("cupText").textContent=d===n?"¡Lo lograste! Completaste toda la aventura.":"Completá los "+n+" módulos, de Inicial a B2, en el orden que quieras. Cada nivel completo te da una medalla 🏅. "+(d===0?"¡Empezá por cualquiera!":"Te falta"+(left===1?" 1 módulo":"n "+left+" módulos")+".");
+  $("cupBtn").hidden=d!==n;
+  // arcade
+  const chestOk=prog.chest!==today();
+  $("chestBtn").disabled=!chestOk;$("chestBtn").classList.toggle("glow",chestOk);$("chestTxt").textContent=chestOk?"¡Abrilo!":"Volvé mañana";
+  $("blitzTxt").textContent=prog.blitzBest?"Récord: "+prog.blitzBest:"60 segundos";
+  $("memoTxt").textContent=prog.memoBest?"Récord: "+prog.memoBest+" jugadas":"Encontrá los pares";
+  // worlds
+  const W=$("worlds");W.innerHTML="";
+  const chips=document.createElement("div");chips.className="chips";
+  WORLDS.forEach((w,wi)=>{const wd=w.mods.filter(m=>topicStars(m.id)>0).length,c=document.createElement("button");c.className="chip"+(wd===w.mods.length?" full":"");c.style.setProperty("--c","var(--"+w.color+")");
+    c.innerHTML=w.ic+" "+w.lvl+" · "+wd+"/"+w.mods.length;c.onclick=()=>{const el=$("world"+wi);if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-70,behavior:"smooth"});};chips.appendChild(c);});
+  W.appendChild(chips);
+  WORLDS.forEach((w,wi)=>{
+    const sec=document.createElement("div");sec.className="world";sec.id="world"+wi;sec.style.setProperty("--c","var(--"+w.color+")");sec.style.setProperty("--d","var(--"+w.color+"-deep)");
+    const wd=w.mods.filter(m=>topicStars(m.id)>0).length;
+    sec.innerHTML='<div class="whead"><div class="wi">'+w.ic+'</div><div><h2>'+w.name+' <span class="lvtag">'+w.lvl+'</span>'+(wd===w.mods.length?'<span class="medal" title="Medalla">🏅</span>':'')+'</h2><p>'+wd+' de '+w.mods.length+' completados'+(wd===w.mods.length?' · ¡Medalla ganada!':'')+'</p></div></div>';
+    const g=document.createElement("div");g.className="mods";
+    w.mods.forEach(m=>{const s=topicStars(m.id),b=document.createElement("button");b.className="mod"+(s?" done":"");
+      b.innerHTML=(s?'<span class="chk">✓</span>':(!prog.seen[m.id]?'<span class="new">NUEVO</span>':''))+'<span class="e">'+m.ic+'</span><b>'+esc(m.name)+'</b><span class="stars">'+starsHtml(s,3)+'</span>';
+      b.onclick=()=>openLearn(m);g.appendChild(b);});
+    sec.appendChild(g);W.appendChild(sec);
   });
-  $("teacher").checked=!!prog.teacher;updateTotal();
+  topbar();
 }
-$("teacher").onchange=e=>{prog.teacher=e.target.checked;save();renderMap();};
-function resetUI(){
-  const w=$("resetWrap");
-  w.innerHTML='<span class="confirm">¿Borrar todas las estrellas? <button class="btn tomato" id="rsYes" style="padding:6px 12px;font-size:.95rem">Sí, borrar</button><button class="btn ghost" id="rsNo" style="padding:6px 12px;font-size:.95rem">No</button></span>';
-  $("rsYes").onclick=()=>{prog.stars={};save();restore();renderMap();};
+$("avBig").onclick=()=>openShop();$("goShop").onclick=()=>openShop();$("goAlbum").onclick=()=>openAlbum();
+$("cupBtn").onclick=()=>openWin();
+$("luckyBtn").onclick=()=>{const pend=MODS.filter(m=>!topicStars(m.id));const m=rnd(pend.length?pend:MODS);toast("🎲 ¡Te tocó: "+m.name+"!");startGame(m);};
+$("chestBtn").onclick=()=>{if(prog.chest===today())return;prog.chest=today();const n=10+Math.floor(Math.random()*4)*5+(streakNow()>=3?10:0);addCoins(n);save();sfx.coin();setTimeout(sfx.win,120);confetti();toast("🎁 ¡Encontraste "+n+" monedas!"+(streakNow()>=3?" (bonus por racha 🔥)":""));renderHome();};
+function resetUI(){const w=$("resetWrap");
+  w.innerHTML='<span style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center">¿Borrar todo el progreso? <button class="btn small tomato" id="rsYes">Sí, borrar</button><button class="btn small ghost" id="rsNo">No</button></span>';
+  $("rsYes").onclick=()=>{const name=prog.name;prog={stars:{},coins:0,xp:0,avatar:"🐣",owned:["🐣","🐶"],name,streak:{last:"",count:0},chest:"",blitzBest:0,memoBest:0,won:false,seen:{}};save();restore();renderHome();};
   $("rsNo").onclick=restore;
-  function restore(){w.innerHTML='<button class="linkbtn" id="resetBtn">Borrar progreso</button>';$("resetBtn").onclick=resetUI;}
-}
+  function restore(){w.innerHTML='<button class="linkbtn" id="resetBtn">Borrar progreso</button>';$("resetBtn").onclick=resetUI;}}
 $("resetBtn").onclick=resetUI;
 
-/* ============ LEVEL ============ */
-function openLevel(L){
-  curLevel=L;const c="var(--"+L.color+")";
-  $("lvlNum").textContent=L.n;$("lvlNum").style.background=c;
-  $("lvlName").textContent="Nivel "+L.n+": "+L.name;$("lvlSub").textContent=L.sub;
-  const box=$("topics");box.innerHTML="";
-  L.topics.forEach(t=>{
-    const d=document.createElement("div");d.className="topic";
-    d.innerHTML='<div class="ic">'+t.ic+'</div><h3>'+t.name+'</h3><div class="stars">'+starsHtml(topicStars(t.id),3)+'</div><div class="row"><button class="btn ghost" data-a="learn">Aprender</button><button class="btn" data-a="play" style="--c:'+c+';--d:var(--'+L.color+'-deep)">Jugar ▶</button></div>';
-    d.querySelector('[data-a="learn"]').onclick=()=>openLearn(t);
-    d.querySelector('[data-a="play"]').onclick=()=>startGame(t);
-    box.appendChild(d);
-  });
-  show("level");
-}
-
-/* ============ LEARN ============ */
-function learnItems(t){return t.kind==="grammar"?t.blanks.map(b=>({en:b[0].replace("___",b[1]),es:b[3]})):t.items;}
+/* =================== LEARN =================== */
+function learnItems(t){if(t.learn)return t.learn;if(t.items)return t.items;if(t.passages)return t.passages;return t.blanks.map(b=>({en:b[0].replace("___",b[1]),es:b[3]}));}
+function setColor(el,t){el.style.setProperty("--c","var(--"+t.color+")");el.style.setProperty("--d","var(--"+t.color+"-deep)");}
 function openLearn(t){
-  curTopic=t;const L=curLevel;
-  $("learnIc").textContent=t.ic;$("learnIc").style.background="var(--"+L.color+")";$("learnName").textContent=t.name;
-  $("learnTip").innerHTML=t.tip?'<div class="tip" style="--c:var(--'+L.color+'-deep)">'+t.tip+'</div>':"";
+  curTopic=t;prog.seen[t.id]=1;save();
+  const h=$("learnHead");setColor(h,t);
+  h.innerHTML='<div class="ic">'+t.ic+'</div><div class="tx"><h2>'+esc(t.name)+'</h2><p>'+esc(t.world.name)+' · Tocá cada tarjeta para escucharla.</p></div><span class="stars">'+starsHtml(topicStars(t.id),3)+'</span><button class="btn leaf" id="learnPlay">¡Jugar! ▶</button>';
+  $("learnPlay").onclick=()=>startGame(t);
+  const tip=$("learnTip");setColor(tip,t);tip.innerHTML=t.tip?'<div class="tip">'+t.tip+'</div>':"";
   const list=$("learnList");list.innerHTML="";
   const items=learnItems(t);
-  if(t.kind==="vocab"){
-    const g=document.createElement("div");g.className="cards";
-    items.forEach(it=>{const b=document.createElement("button");b.className="fcard";b.style.setProperty("--c","var(--"+L.color+")");
-      b.innerHTML='<div class="v">'+(it.c?'<span class="swatch" style="background:'+it.c+'"></span>':(it.v||'<span class="spk">🔈</span>'))+'</div><div class="en">'+esc(it.en)+'</div><div class="es">'+esc(it.es)+'</div>';
+  if(items.every(hasVis)){
+    const g=document.createElement("div");g.className="cards";setColor(g,t);
+    items.forEach(it=>{const b=document.createElement("button");b.className="fcard"+(it.en.length>12?" long":"");
+      b.innerHTML='<div class="v">'+visHTML(it)+'</div><div class="en">'+esc(it.en)+'</div><div class="es">'+esc(it.es)+'</div>';
       b.onclick=()=>{speak(it.en);b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");};g.appendChild(b);});
     list.appendChild(g);
   }else{
@@ -420,150 +879,413 @@ function openLearn(t){
       b.onclick=()=>speak(it.en);g.appendChild(b);});
     list.appendChild(g);
   }
+  if(t.items&&t.blanks){const g=document.createElement("div");g.className="sentences";
+    t.blanks.forEach(bl=>{const it={en:bl[0].replace("___",bl[1]),es:bl[3]};const b=document.createElement("button");b.className="sent";
+      b.innerHTML='<span class="spk">🔈</span><span class="t"><div class="en">'+esc(it.en)+'</div><div class="es">'+esc(it.es)+'</div></span>';b.onclick=()=>speak(it.en);g.appendChild(b);});
+    list.appendChild(g);}
+  if(t.dialogs){const g=document.createElement("div");g.className="sentences";
+    t.dialogs.forEach(d=>{const b=document.createElement("button");b.className="dlg";b.innerHTML='<div class="bub them">🧑 '+esc(d[0])+'</div><div class="bub me">'+esc(d[1])+'</div>';b.onclick=()=>speak(d[0]+" "+d[1]);g.appendChild(b);});
+    list.appendChild(g);}
+  if(t.correct){const g=document.createElement("div");g.className="sentences";
+    t.correct.forEach(c=>{const b=document.createElement("button");b.className="sent";b.innerHTML='<span class="spk">✅</span><span class="t"><div class="en">'+esc(c[0])+'</div><div class="es">❌ '+esc(c[1][0])+'</div></span>';b.onclick=()=>speak(c[0]);g.appendChild(b);});
+    list.appendChild(g);}
+  if(t.pairs){const g=document.createElement("div");g.className="cards";setColor(g,t);
+    t.pairs.forEach(p=>{const b=document.createElement("button");b.className="fcard";b.innerHTML='<div class="en">'+esc(p[0])+'</div><div class="es">↓</div><div class="en" style="color:var(--d)">'+esc(p[1])+'</div>';b.onclick=()=>speak(p[0]+", "+p[1]);g.appendChild(b);});
+    list.appendChild(g);}
   show("learn");
 }
-$("learnPlay").onclick=()=>startGame(curTopic);
+$("learnPlay2").onclick=()=>startGame(curTopic);
 
-/* ============ QUESTION GENERATION ============ */
+/* =================== QUESTION GENERATION =================== */
+function matchQ(t){
+  let P=[];
+  if(t.pairs)P=t.pairs.map(p=>({L:esc(p[0]),R:esc(p[1]),say:p[0]+", "+p[1],k:p[1]}));
+  else if(t.items){const vis=t.items.filter(hasVis);
+    if(vis.length>=4)P=vis.map(it=>({L:visHTML(it),R:esc(it.en),say:it.en,k:it.en,vis:1}));
+    else P=t.items.map(it=>({L:esc(it.en),R:esc(it.es),say:it.en,k:it.es}));}
+  else if(t.blanks)P=t.blanks.map(b=>({L:esc(b[0].replace("___",b[1])),R:esc(b[3]),say:b[0].replace("___",b[1]),k:b[3]}));
+  const seenL=new Set(),seenK=new Set();
+  P=shuffle(P).filter(p=>{if(seenL.has(p.L)||seenK.has(p.k))return false;seenL.add(p.L);seenK.add(p.k);return true;});
+  const n=Math.min(P.length,(P[0]&&P[0].vis&&t.id!=="clock")?5:4);
+  if(n<3)return null;
+  return {key:"match",type:"match",cat:"match",hint:"Uní con flechas",pairs:P.slice(0,n)};
+}
+function seqQ(t,i){
+  const slots=t.seqSlots.map(s=>rnd(s));
+  const idx=shuffle([...slots.keys()]).slice(0,4).sort((a,b)=>a-b);
+  const steps=idx.map(k=>slots[k]);
+  const lab=en=>{const it=t.items.find(x=>x.en===en);return it.v+" "+en;};
+  const answer=steps.map(lab);
+  return {key:"seq"+i,type:"build",cat:"seq",hint:"Ordená el día: ¿qué va primero?",sub:"Tocá los pasos en orden",tokens:answer.slice(),answerTokens:answer,joiner:"|",seq:true,say:steps.join(", then ")};
+}
 function genQuestions(t){
-  const q=[];
-  if(t.kind==="vocab"){
-    const en=t.items.map(i=>i.en), es=t.items.map(i=>i.es);
+  const pool=[];
+  if(t.items){
+    const en=t.items.map(i=>i.en),es=t.items.map(i=>i.es);
     t.items.forEach(it=>{
-      if(it.v||it.c) q.push({key:it.en,type:"choice",hint:it.c?"¿De qué color es?":"¿Cómo se dice en inglés?",vis:it.v,sw:it.c,answer:it.en,options:pick(it.en,en),say:it.en,es:it.es});
-      q.push({key:it.en,type:"choice",hint:"Traducí al inglés",big:it.es,answer:it.en,options:pick(it.en,en),say:it.en});
-      q.push({key:it.en,type:"choice",hint:"¿Qué significa?",big:it.en,answer:it.es,options:pick(it.es,es),say:it.en,sayFirst:true});
-      if(canSpeak) q.push({key:it.en,type:"choice",hint:"Escuchá y elegí",listen:it.en,answer:it.en,options:pick(it.en,en),say:it.en,es:it.es});
-    });
-    if(t.extra) q.push(...t.extra());
-  }else if(t.kind==="phrases"){
-    const en=t.items.map(i=>i.en), es=t.items.map(i=>i.es);
-    t.items.forEach(it=>{
-      q.push({key:it.en,type:"choice",hint:"¿Cómo se dice en inglés?",big:it.es,answer:it.en,options:pick(it.en,en),say:it.en});
-      q.push({key:it.en,type:"choice",hint:"¿Qué significa?",big:it.en,answer:it.es,options:pick(it.es,es),say:it.en,sayFirst:true});
-      q.push({key:it.en,type:"order",hint:"Armá la frase en inglés",sub:it.es,answer:it.en,say:it.en});
-      if(canSpeak) q.push({key:it.en,type:"choice",hint:"Escuchá y elegí",listen:it.en,answer:it.en,options:pick(it.en,en),say:it.en,es:it.es});
-    });
-  }else{
-    t.blanks.forEach(b=>{
-      const full=b[0].replace("___",b[1]);
-      q.push({key:b[0],type:"choice",hint:"Completá la frase",blank:b[0],sub:b[3],answer:b[1],options:shuffle([b[1],...b[2]]),say:full,es:b[3]});
-      q.push({key:b[0],type:"choice",hint:"Completá la frase",blank:b[0],sub:b[3],answer:b[1],options:shuffle([b[1],...b[2]]),say:full,es:b[3]});
-      if(full.split(" ").length<=9) q.push({key:b[0],type:"order",hint:"Armá la frase en inglés",sub:b[3],answer:full,say:full});
+      const words=it.en.split(" ");
+      if(hasVis(it)){
+        pool.push({key:it.en,type:"choice",cat:"pic2word",hint:it.c?"¿De qué color es?":"¿Cómo se dice en inglés?",visHtml:visHTML(it),answer:it.en,options:pick(it.en,en),say:it.en,es:it.es});
+        const opts=pick(it.en,en);
+        pool.push({key:it.en,type:"pic",cat:"word2pic",hint:"Tocá la imagen correcta",big:it.en,answer:it.en,options:opts,visOf:Object.fromEntries(opts.map(o=>[o,visHTML(t.items.find(x=>x.en===o))])),say:it.en,sayFirst:true,es:it.es});
+      }
+      pool.push({key:it.en,type:"choice",cat:"es2en",hint:"Traducí al inglés",big:it.es,answer:it.en,options:pick(it.en,en),say:it.en});
+      pool.push({key:it.en,type:"choice",cat:"en2es",hint:"¿Qué significa?",big:it.en,answer:it.es,options:pick(it.es,es),say:it.en,sayFirst:true});
+      if(canSpeak)pool.push({key:it.en,type:"choice",cat:"listen",hint:"Escuchá y elegí",listen:it.en,answer:it.en,options:pick(it.en,en),say:it.en,es:it.es});
+      if(words.length>=3&&words.length<=8&&!t.noOrder)pool.push({key:it.en,type:"build",cat:"order",hint:"Armá la frase en inglés",sub:it.es,visHtml:hasVis(it)?visHTML(it):"",tokens:words,answerTokens:words,joiner:" ",say:it.en});
+      if(words.length===1&&/^[a-z]{3,9}$/.test(it.en)&&!t.noSpell){
+        const letters=it.en.split(""),abc="abcdefghijklmnopqrstuvwxyz".split("").filter(c=>!letters.includes(c));
+        pool.push({key:it.en,type:"build",cat:"spell",hint:"Escribí la palabra",visHtml:visHTML(it),sub:it.es,tokens:letters.concat(shuffle(abc).slice(0,2)),answerTokens:letters,joiner:"",letters:true,say:it.en});
+      }
     });
   }
-  // pick 10 with unique keys where possible
-  const out=[],used=new Set();
-  shuffle(q).forEach(x=>{if(out.length<10&&!used.has(x.key)){used.add(x.key);out.push(x);}});
-  shuffle(q).forEach(x=>{if(out.length<10&&!out.includes(x))out.push(x);});
-  return out;
+  if(t.blanks)t.blanks.forEach(b=>{
+    const full=b[0].replace("___",b[1]);
+    pool.push({key:b[0],type:"choice",cat:"blank",hint:"Completá la frase",blank:b[0],sub:b[3],answer:b[1],options:shuffle([b[1],...b[2]]),say:full,es:b[3]});
+    if(full.split(" ").length<=9&&!t.noOrder)pool.push({key:b[0],type:"build",cat:"order",hint:"Armá la frase en inglés",sub:b[3],tokens:full.split(" "),answerTokens:full.split(" "),joiner:" ",say:full});
+  });
+  if(t.pairs&&!t.items){const past=t.pairs.map(p=>p[1]);
+    t.pairs.forEach((p,i)=>pool.push({key:"pr"+i,type:"choice",cat:"pairq",hint:t.pairHint||"¿Cuál va?",big:p[0]+" → ?",answer:p[1],options:pick(p[1],t.edDecoy?past.concat([p[0]+"ed"]):past),say:p[0]+", "+p[1]}));}
+  if(t.dialogs)t.dialogs.forEach((d,i)=>pool.push({key:"dl"+i,type:"choice",cat:"dialog",long:true,hint:"¿Qué respondés?",chat:d[0],sub:d[3],answer:d[1],options:shuffle([d[1],...d[2]]),say:d[0]+" "+d[1]}));
+  if(t.correct)t.correct.forEach((c,i)=>pool.push({key:"cr"+i,type:"choice",cat:"correct",long:true,hint:"¿Cuál es la frase correcta?",sub:c[2],answer:c[0],options:shuffle([c[0],...c[1]]),say:c[0]}));
+  if(t.passages)t.passages.forEach((p,pi)=>p.qs.forEach((x,i)=>pool.push({key:"rd"+pi+"_"+i,type:"choice",cat:"reading",long:true,hint:"Leé y respondé",passage:p.en,qq:x[0],answer:x[1],options:shuffle([x[1],...x[2]]),say:x[1]})));
+  if(t.extra)pool.push(...t.extra());
+  // caps per category
+  const CAP={pic2word:3,word2pic:2,es2en:2,en2es:2,listen:2,order:2,spell:2,blank:5,extra:4,pairq:2,dialog:3,correct:2,reading:10};
+  const out=[],used=new Set(),cnt={};
+  const take=x=>{out.push(x);used.add(x.key);cnt[x.cat]=(cnt[x.cat]||0)+1;};
+  if(t.seqSlots){take(seqQ(t,0));take(seqQ(t,1));}
+  const sp=shuffle(pool.filter(x=>x.cat==="spell"))[0];if(sp)take(sp);
+  const mq=matchQ(t),N=mq?9:10;
+  shuffle(pool).forEach(x=>{if(out.length<N&&!used.has(x.key)&&(cnt[x.cat]||0)<(CAP[x.cat]||3))take(x);});
+  shuffle(pool).forEach(x=>{if(out.length<N&&!out.includes(x))take(x);});
+  shuffle(out);
+  if(mq)out.splice(2+Math.floor(Math.random()*5),0,mq);
+  return out.slice(0,10);
 }
 
-/* ============ GAME ============ */
+/* =================== GAME =================== */
 let G=null;
-const PRAISE=["Great job!","Awesome!","Well done!","Super!","Excellent!","You got it!"];
+const PRAISE=["Great job!","Awesome!","Well done!","Super!","Excellent!","You got it!","Fantastic!","Amazing!"];
 function startGame(t){
-  curTopic=t;
-  G={t,qs:genQuestions(t),i:0,hearts:3,score:0,streak:0,miss:0,done:false};
+  curTopic=t;prog.seen[t.id]=1;
+  G={t,qs:genQuestions(t),i:0,hearts:3,score:0,streak:0,best:0,miss:0,correct:0,done:false,cont:false};
   show("play");renderQ();
 }
 function hud(){
   $("bar").style.width=(G.i/G.qs.length*100)+"%";
   $("hearts").innerHTML=starsHtml(G.hearts,3).replace(/★/g,"♥");
   $("score").textContent=G.score;
+  const c=$("combo");c.textContent=G.streak>=2?"🔥 Combo x"+G.streak+(G.streak>=3?"  (+"+(G.streak>=6?10:5)+" bonus)":""):"";
 }
 function renderQ(){
-  hud();G.done=false;$("feedback").hidden=true;
+  hud();G.done=false;$("feedback").hidden=true;G.t0=performance.now();
   const q=G.qs[G.i],c=$("qcard"),a=$("answers");
   let h='<div class="qhint">'+esc(q.hint)+'</div>';
-  if(q.vis)h+='<div class="qvis">'+q.vis+'</div>';
-  if(q.sw)h+='<div class="qvis"><span class="swatch big" style="background:'+q.sw+'"></span></div>';
-  if(q.listen)h+='<button class="listen" id="lsBtn" aria-label="Escuchar de nuevo">🔊</button><div><button class="linkbtn hintbtn" id="lsHint">¿No se escucha? Ver pista</button></div>';
-  if(q.big)h+='<div class="qbig">'+esc(q.big)+'</div>';
+  if(q.visHtml)h+='<div class="qvis">'+q.visHtml+'</div>';
+  if(q.passage)h+='<div class="passage">'+esc(q.passage)+'</div><div class="qq">'+esc(q.qq)+'</div>';
+  if(q.chat)h+='<div class="chat"><div class="bub them">🧑 '+esc(q.chat)+'</div><div class="bub me">• • •</div></div>';
+  if(q.listen)h+='<button class="listen" id="lsBtn" aria-label="Escuchar de nuevo">🔊</button><div><button class="linkbtn" id="lsHint" style="margin-top:8px">¿No se escucha? Ver pista</button></div>';
+  if(q.big)h+='<div class="qbig">'+esc(q.big)+(q.sayFirst?' <button class="linkbtn" id="sayBig" aria-label="Escuchar" style="text-decoration:none">🔈</button>':'')+'</div>';
   if(q.blank)h+='<div class="qbig">'+esc(q.blank).replace("___",'<span class="blank">&nbsp;?&nbsp;</span>')+'</div>';
   if(q.sub)h+='<div class="qsub">'+esc(q.sub)+'</div>';
+  if(q.type==="match")h+='<div class="qsub">Arrastrá desde un punto hasta su pareja, o tocá uno de cada lado.</div>';
   c.innerHTML=h;c.classList.remove("pop");void c.offsetWidth;c.classList.add("pop");
   if(q.listen){$("lsBtn").onclick=()=>speak(q.listen);$("lsHint").onclick=function(){this.outerHTML='<div class="qsub">Pista: significa “'+esc(q.es)+'”</div>';};setTimeout(()=>speak(q.listen),250);}
-  if(q.sayFirst)setTimeout(()=>speak(q.big),250);
+  if(q.sayFirst){$("sayBig").onclick=()=>speak(q.big);setTimeout(()=>speak(q.big),250);}
   a.innerHTML="";
-  if(q.type==="choice"){
-    const g=document.createElement("div");g.className="opts";
-    q.options.forEach(o=>{const b=document.createElement("button");b.className="opt";b.textContent=o;b.onclick=()=>choose(b,o);g.appendChild(b);});
+  if(q.type==="choice"||q.type==="pic"){
+    const g=document.createElement("div");g.className="opts"+(q.long||q.options.some(o=>o.length>22)?" long":"");
+    q.options.forEach((o,i)=>{const b=document.createElement("button");b.className="opt"+(q.type==="pic"?" picopt":"");b.dataset.val=o;
+      b.innerHTML='<span class="k">'+(i+1)+'</span>'+(q.type==="pic"?q.visOf[o]:esc(o));
+      if(q.type==="pic")b.setAttribute("aria-label",o);
+      b.onclick=()=>choose(b,o);g.appendChild(b);});
     a.appendChild(g);
-  }else{
-    const words=q.answer.split(" ");
-    const slot=document.createElement("div");slot.className="slot";slot.id="slot";
-    const bank=document.createElement("div");bank.className="bank";
-    const order=shuffle(words.map((w,i)=>i));
-    if(order.every((v,i)=>v===i)&&words.length>1)order.reverse();
-    const picked=[];
-    order.forEach(i=>{const b=document.createElement("button");b.className="tile";b.textContent=words[i];
-      b.onclick=()=>{if(G.done)return;b.classList.add("used");picked.push(i);
-        const s=document.createElement("button");s.className="tile";s.textContent=words[i];
-        s.onclick=()=>{if(G.done)return;picked.splice(picked.indexOf(i),1);s.remove();b.classList.remove("used");};
-        slot.appendChild(s);};
-      bank.appendChild(b);});
-    const chk=document.createElement("div");chk.className="center";
-    chk.innerHTML='<button class="btn grape" id="chkBtn" style="--c:var(--grape);--d:var(--grape-deep)">Comprobar</button>';
-    a.append(slot,bank,chk);
-    $("chkBtn").onclick=()=>{if(G.done)return;if(!picked.length)return;
-      const ok=picked.map(i=>words[i]).join(" ")===q.answer;
-      $("chkBtn").disabled=true;
-      slot.style.borderColor=ok?"var(--leaf)":"var(--tomato)";
-      result(ok);};
-  }
+  }else if(q.type==="build")renderBuild(q,a);
+  else if(q.type==="match")renderMatch(q,a);
+}
+function renderBuild(q,a){
+  const slot=document.createElement("div");slot.className="slot"+(q.seq?" seq":"");
+  const bank=document.createElement("div");bank.className="bank";
+  let order=shuffle(q.tokens.map((w,i)=>i));
+  if(order.every((v,i)=>v===i)&&q.tokens.length>1)order.reverse();
+  const picked=[];
+  order.forEach(i=>{const b=document.createElement("button");b.className="tile"+(q.letters?" letter":"");b.textContent=q.tokens[i];
+    b.onclick=()=>{if(G.done)return;b.classList.add("used");picked.push(i);sfx.flip();
+      const s=document.createElement("button");s.className="tile"+(q.letters?" letter":"");s.textContent=q.tokens[i];
+      s.onclick=()=>{if(G.done)return;picked.splice(picked.indexOf(i),1);s.remove();b.classList.remove("used");};
+      slot.appendChild(s);
+      if(picked.length===q.answerTokens.length&&(q.seq||q.letters))check();};
+    bank.appendChild(b);});
+  const chk=document.createElement("div");chk.className="center";
+  chk.innerHTML='<button class="btn grape" id="chkBtn">Comprobar</button>';
+  a.append(slot,bank,chk);
+  function check(){if(G.done||!picked.length)return;
+    const ok=picked.map(i=>q.tokens[i]).join(q.joiner)===q.answerTokens.join(q.joiner);
+    $("chkBtn").disabled=true;slot.style.borderColor=ok?"var(--leaf)":"var(--tomato)";
+    result(ok,q.answerTokens.join(q.seq?" → ":q.joiner));}
+  $("chkBtn").onclick=check;
 }
 function choose(btn,o){
   if(G.done)return;const q=G.qs[G.i],ok=o===q.answer;
-  document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;if(b.textContent===q.answer)b.classList.add("ok");});
+  document.querySelectorAll("#answers .opt").forEach(b=>{b.disabled=true;if(b.dataset.val===q.answer)b.classList.add("ok");});
   if(!ok)btn.classList.add("no");
-  result(ok);
+  result(ok,q.answer,btn);
 }
-function result(ok){
+
+/* ---------- Unir con flechas ---------- */
+let MT=null;
+function renderMatch(q,a){
+  const box=document.createElement("div");box.className="match";
+  const mk=c=>'<marker id="ah-'+c+'" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--'+c+')"/></marker>';
+  box.innerHTML='<div class="mcol" id="mL"></div><div class="mcol" id="mR"></div><svg aria-hidden="true"><defs>'+mk("sky")+mk("leaf")+mk("tomato")+'</defs><g id="mLines"></g><line id="mTemp" style="stroke:var(--sky);stroke-width:5;stroke-linecap:round;stroke-dasharray:2 9" marker-end="url(#ah-sky)" visibility="hidden"/></svg>';
+  a.appendChild(box);
+  const L=$("mL"),R=$("mR");
+  MT={box,done:[],errors:0,sel:null,n:q.pairs.length};
+  const mkItem=(p,side)=>{const d=document.createElement("div");d.className="mitem m"+side+(side==="L"&&p.vis?" vis":"");d.dataset.k=p.k;d.dataset.side=side;d.tabIndex=0;d.setAttribute("role","button");
+    d.innerHTML=(side==="L"?p.L:p.R)+'<span class="dot"></span>';d._p=p;
+    d.addEventListener("pointerdown",e=>down(e,d));
+    d.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tapItem(d);}});
+    return d;};
+  shuffle(q.pairs.slice()).forEach(p=>L.appendChild(mkItem(p,"L")));
+  shuffle(q.pairs.slice()).forEach(p=>R.appendChild(mkItem(p,"R")));
+}
+function anchor(el){const r=el.getBoundingClientRect(),b=MT.box.getBoundingClientRect();return{x:(el.dataset.side==="L"?r.right+4:r.left-4)-b.left,y:r.top+r.height/2-b.top};}
+function drawLine(a,b,color,id){const NS="http://www.w3.org/2000/svg";const l=document.createElementNS(NS,"line");
+  const p=anchor(a),q=anchor(b);const from=a.dataset.side==="L"?p:q,to=a.dataset.side==="L"?q:p;
+  l.setAttribute("x1",from.x);l.setAttribute("y1",from.y);l.setAttribute("x2",to.x);l.setAttribute("y2",to.y);
+  l.setAttribute("style","stroke:var(--"+color+");stroke-width:5;stroke-linecap:round");l.setAttribute("marker-end","url(#ah-"+color+")");
+  $("mLines").appendChild(l);return l;}
+function redrawMatch(){if(!MT||!document.body.contains(MT.box))return;$("mLines").innerHTML="";MT.done.forEach(([a,b])=>drawLine(a,b,"leaf"));}
+window.addEventListener("resize",redrawMatch);
+function selectItem(d){document.querySelectorAll(".mitem.sel").forEach(x=>x.classList.remove("sel"));MT.sel=d;if(d)d.classList.add("sel");}
+function tapItem(d){if(G.done||d.classList.contains("done"))return;
+  if(MT.sel&&MT.sel!==d&&MT.sel.dataset.side!==d.dataset.side)attempt(MT.sel,d);else selectItem(MT.sel===d?null:d);}
+function down(e,d){
+  if(G.done||d.classList.contains("done"))return;e.preventDefault();
+  if(MT.sel&&MT.sel.dataset.side!==d.dataset.side){attempt(MT.sel,d);return;}
+  selectItem(d);
+  const start={x:e.clientX,y:e.clientY};let moved=false;const tmp=$("mTemp");
+  const mv=ev=>{const dx=ev.clientX-start.x,dy=ev.clientY-start.y;if(!moved&&Math.hypot(dx,dy)>8)moved=true;if(!moved)return;
+    const p=anchor(d),b=MT.box.getBoundingClientRect();tmp.setAttribute("x1",p.x);tmp.setAttribute("y1",p.y);tmp.setAttribute("x2",ev.clientX-b.left);tmp.setAttribute("y2",ev.clientY-b.top);tmp.setAttribute("visibility","visible");};
+  const up=ev=>{window.removeEventListener("pointermove",mv);window.removeEventListener("pointerup",up);window.removeEventListener("pointercancel",up);tmp.setAttribute("visibility","hidden");
+    if(!moved)return;const el=document.elementFromPoint(ev.clientX,ev.clientY);const tg=el&&el.closest?el.closest(".mitem"):null;
+    if(tg&&tg.dataset.side!==d.dataset.side&&!tg.classList.contains("done"))attempt(d,tg);else selectItem(null);};
+  window.addEventListener("pointermove",mv);window.addEventListener("pointerup",up);window.addEventListener("pointercancel",up);
+}
+function attempt(a,b){
+  selectItem(null);
+  if(a.dataset.k===b.dataset.k){
+    a.classList.add("done");b.classList.add("done");MT.done.push([a,b]);drawLine(a,b,"leaf");
+    sfx.pair();speak(a._p.say);floaty("+5",b);
+    if(MT.done.length===MT.n)setTimeout(()=>{if(cur==="play"&&!G.done)result(MT.errors===0,null,null,true);},500);
+  }else{
+    MT.errors++;sfx.no();const l=drawLine(a,b,"tomato");
+    [a,b].forEach(x=>{x.classList.remove("bad");void x.offsetWidth;x.classList.add("bad");});
+    setTimeout(()=>{l.remove();a.classList.remove("bad");b.classList.remove("bad");},650);
+  }
+}
+
+/* ---------- resultado de cada pregunta ---------- */
+function result(ok,answerText,el,isMatch){
   G.done=true;const q=G.qs[G.i];
-  if(ok){G.streak++;G.score+=10+(G.streak>=3?5:0);sfx.ok();}
-  else{G.streak=0;G.miss++;G.hearts--;sfx.no();}
-  setTimeout(()=>speak(q.say),ok?250:450);
+  let gained=0,fast=false;
+  if(ok){G.streak++;G.best=Math.max(G.best,G.streak);G.correct++;
+    gained=isMatch?20:10;if(G.streak>=6)gained+=10;else if(G.streak>=3)gained+=5;
+    if(!isMatch&&q.type!=="build"&&performance.now()-G.t0<4000){gained+=5;fast=true;}
+    G.score+=gained;sfx.ok(Math.min(G.streak,8));
+    floaty("+"+gained+(fast?" ⚡":""),el||$("qcard"));
+    if(G.streak===3||G.streak===6||G.streak===10){const c=$("combo");c.classList.remove("hot");void c.offsetWidth;c.classList.add("hot");}
+  }else{
+    G.streak=0;G.miss++;G.hearts--;sfx.no();
+    if(isMatch){G.score+=10;G.correct++;}
+  }
+  if(!isMatch)setTimeout(()=>speak(q.say),ok?250:450);
   const fb=$("feedback");fb.hidden=false;fb.classList.toggle("bad",!ok);
-  const extra=q.es&&q.type!=="order"&&!q.blank?' <span>('+esc(q.es)+')</span>':(q.blank?'<span>'+esc(q.say)+'</span>':'');
-  $("fbMsg").innerHTML=ok
-    ?'<strong>'+PRAISE[Math.floor(Math.random()*PRAISE.length)]+(G.streak>=3?' 🔥 x'+G.streak:'')+'</strong>'+(q.blank?extra:'<span>'+esc(q.answer)+'</span>'+extra)
-    :'<strong>¡Casi! Oops…</strong><span>La respuesta es: <b>'+esc(q.type==="order"?q.answer:q.answer)+'</b></span>'+(q.blank?'<br>'+extra:'');
+  let msg;
+  if(isMatch)msg=ok?'<strong>¡Todas unidas! Perfect! 🎯</strong><span>Sin errores: +20</span>':'<strong>¡Unidas! Pero con '+MT.errors+' error'+(MT.errors>1?'es':'')+'</strong><span>Perdiste una vida. ¡La próxima sin fallar!</span>';
+  else if(ok)msg='<strong>'+rnd(PRAISE)+(G.streak>=3?' 🔥 x'+G.streak:'')+(fast?' ⚡':'')+'</strong><span>'+esc(q.blank?q.say:answerText)+(q.es&&!q.blank?' ('+esc(q.es)+')':'')+'</span>';
+  else msg='<strong>¡Casi! Oops…</strong><span>La respuesta es: <b>'+esc(answerText)+'</b>'+(q.blank?'<br>'+esc(q.say):'')+'</span>';
+  $("fbMsg").innerHTML=msg;
   $("nextBtn").className="btn "+(ok?"leaf":"tomato");
   hud();$("nextBtn").focus({preventScroll:true});
 }
 $("nextBtn").onclick=next;
-document.addEventListener("keydown",e=>{if(e.key==="Enter"&&cur==="play"&&G&&G.done&&!$("feedback").hidden&&document.activeElement!==$("nextBtn")){e.preventDefault();next();}});
+document.addEventListener("keydown",e=>{
+  if(cur==="play"&&G){
+    if(e.key==="Enter"&&G.done&&!$("feedback").hidden&&document.activeElement!==$("nextBtn")){e.preventDefault();next();return;}
+    if(!G.done&&/^[1-4]$/.test(e.key)){const b=document.querySelectorAll("#answers .opt")[+e.key-1];if(b)b.click();}
+  }
+  if(cur==="blitz"&&BZ&&/^[1-4]$/.test(e.key)){const b=document.querySelectorAll("#bzAns .opt")[+e.key-1];if(b)b.click();}
+});
 function next(){
   if(G.hearts<=0)return finish(false);
   G.i++;if(G.i>=G.qs.length)return finish(true);
   renderQ();
 }
+
+/* ---------- final de partida ---------- */
 function finish(win){
-  $("bar").style.width="100%";
-  const mouth=$("resMouth");
+  $("bar").style.width="100%";hush();
+  const R=$("resBox");const t=G.t;
   if(win){
-    const st=G.miss===0?3:G.miss<=2?2:1;
-    const before=topicStars(G.t.id);if(st>before){prog.stars[G.t.id]=st;save();}
-    updateTotal();
-    $("resTitle").textContent=st===3?"Perfect! ¡Perfecto!":st===2?"Great job! ¡Muy bien!":"Good! ¡Lo lograste!";
-    $("resStars").innerHTML=starsHtml(st,3);
-    const nextL=LEVELS[curLevel.n];const justOpened=nextL&&!prog.teacher&&levelDone(curLevel)===needFor(curLevel)&&before===0;
-    $("resText").textContent=G.score+" puntos en "+G.t.name+"."+(justOpened?" ¡Abriste el nivel "+nextL.n+"!":"")+(st<3?" Jugá de nuevo sin errores para ganar 3 estrellas.":"");
-    mouth.setAttribute("d","M40 66 Q50 78 60 66");
+    const st=Math.max(1,G.hearts),before=topicStars(t.id),first=before===0;
+    if(st>before)prog.stars[t.id]=st;
+    const w=t.world,medal=first&&w.mods.every(m=>topicStars(m.id)>0);
+    let coins=Math.round(G.score/10)+(first?20:0)+(st===3&&before<3?10:0)+(medal?50:0);
+    const lvUp=addXp(G.score);const streakUp=bumpStreak();
+    addCoins(coins);
+    const allDone=doneCount()===MODS.length,justWon=allDone&&!prog.won;if(justWon)prog.won=true;
+    save();topbar();
+    const left=MODS.length-doneCount();
+    R.innerHTML='<div style="font-size:4rem;line-height:1">'+(st===3?"🤩":st===2?"😄":"🙂")+'</div>'+
+      '<h2>'+(st===3?"Perfect! ¡Perfecto!":st===2?"Great job! ¡Muy bien!":"Good! ¡Lo lograste!")+'</h2>'+
+      '<div class="bigstars">'+starsHtml(st,3,"in")+'</div>'+
+      '<div class="rewards"><span class="pill">'+G.score+' pts</span><span class="pill">🪙 +'+coins+'</span><span class="pill">✨ +'+G.score+' XP</span>'+(G.best>=3?'<span class="pill">🔥 Mejor combo x'+G.best+'</span>':'')+'</div>'+
+      (first?'<div class="sticker"><span class="e">'+t.ic+'</span><b>¡Nueva figurita!</b><small style="font-weight:700;color:var(--muted)">'+esc(t.name)+' ya está en tu álbum</small></div>':'')+
+      (st===3&&before<3?'<p style="font-weight:800;margin:0;color:var(--sun-deep)">✨ ¡Figurita dorada desbloqueada!</p>':'')+
+      (medal?'<div class="sticker"><span class="e">🏅</span><b>¡Medalla: '+esc(w.name)+'!</b><small style="font-weight:700;color:var(--muted)">Completaste todo el nivel '+esc(w.lvl)+' · +50 monedas</small></div>':'')+
+      (lvUp?'<p style="font-weight:800;margin:0;font-size:1.2rem">⬆️ ¡Subiste al nivel '+lvUp+'! Ahora sos '+titleOf(lvUp)+'</p>':'')+
+      (streakUp&&prog.streak.count>1?'<p style="font-weight:800;margin:0">🔥 ¡Racha de '+prog.streak.count+' días seguidos!</p>':'')+
+      '<p style="font-weight:700;margin:0">'+(allDone?(justWon?'🏆 ¡COMPLETASTE TODOS LOS MÓDULOS!':'Ya tenés la Copa. ¡Ahora andá por las 3 estrellas en todo!'):'🏆 Te falta'+(left===1?' 1 módulo':'n '+left+' módulos')+' para la Gran Copa.')+(st<3?' Jugá sin perder vidas para sacar 3 estrellas.':'')+'</p>'+
+      '<div class="row">'+(justWon?'<button class="btn sun" id="resWin">🏆 ¡Reclamá tu Copa!</button>':'')+
+      (!allDone?'<button class="btn leaf" id="resNext">Siguiente módulo ▶</button>':'')+
+      '<button class="btn sun" id="resRetry">Jugar otra vez</button><button class="btn ghost" id="resHome">Volver al mapa</button></div>';
     sfx.win();speak(st===3?"Perfect!":"Great job!");confetti();
+    if(lvUp)setTimeout(sfx.lvl,700);
+    if(justWon){$("resWin").onclick=openWin;setTimeout(()=>{confetti();sfx.lvl();},900);}
+    if(!allDone)$("resNext").onclick=()=>{const pend=MODS.filter(m=>!topicStars(m.id));const i=MODS.indexOf(t);const nx=pend.find(m=>MODS.indexOf(m)>i)||pend[0];openLearn(nx);};
   }else{
-    $("resTitle").textContent="¡Uy! Te quedaste sin vidas";
-    $("resStars").innerHTML=starsHtml(0,3);
-    $("resText").textContent="No pasa nada: repasá en Aprender y probá otra vez. Try again!";
-    mouth.setAttribute("d","M40 70 Q50 62 60 70");
+    const price=15,can=prog.coins>=price&&!G.cont;
+    R.innerHTML='<div style="font-size:4rem;line-height:1">😵</div><h2>¡Uy! Te quedaste sin vidas</h2><div class="bigstars">'+starsHtml(0,3)+'</div>'+
+      '<p style="font-weight:700;margin:0">Ibas por la pregunta '+(G.i+1)+' de '+G.qs.length+'. ¡No pasa nada, try again!</p>'+
+      '<div class="row">'+(can?'<button class="btn tomato" id="resCont">❤️ Seguir jugando (🪙 '+price+')</button>':'')+
+      '<button class="btn sun" id="resRetry">Empezar de nuevo</button><button class="btn ghost" id="resLearn">Repasar</button></div>';
+    if(can)$("resCont").onclick=()=>{prog.coins-=price;save();G.cont=true;G.hearts=1;G.i++;if(G.i>=G.qs.length)return finish(true);show("play");renderQ();};
+    $("resLearn").onclick=()=>openLearn(t);
   }
+  $("resRetry").onclick=()=>startGame(t);
+  const rh=$("resHome");if(rh)rh.onclick=goHome;
   show("result");
 }
-$("resRetry").onclick=()=>startGame(curTopic);
-$("resBack").onclick=()=>openLevel(curLevel);
 
-/* ============ CONFETTI ============ */
+/* =================== RELÁMPAGO (60s) =================== */
+let BZ=null;
+function bzPool(){const P=[];MODS.forEach(m=>{if(!m.items||m.id==="clock")return;m.items.forEach(it=>{if(it.en.split(" ").length<=3)P.push([m,it]);});});return P;}
+function startBlitz(){
+  BZ={score:0,end:performance.now()+60000,streak:0,pool:bzPool(),timer:null,over:false};
+  show("blitz");bzNext();
+  BZ.timer=setInterval(bzTick,100);
+}
+function bzTick(){if(!BZ)return;const left=Math.max(0,BZ.end-performance.now());$("bzTime").textContent=Math.ceil(left/1000);$("bzBar").style.width=(left/600)+"%";if(left<=0)endBlitz();}
+function stopBlitz(){if(BZ){clearInterval(BZ.timer);BZ=null;}}
+function bzNext(){
+  const [m,it]=rnd(BZ.pool),en=m.items.map(x=>x.en);
+  const useVis=hasVis(it)&&Math.random()<.65;
+  const c=$("bzCard");
+  c.innerHTML='<div class="qhint">'+(useVis?"¿Qué es?":"Traducí al inglés")+' · '+esc(m.name)+'</div>'+(useVis?'<div class="qvis">'+visHTML(it)+'</div>':'<div class="qbig">'+esc(it.es)+'</div>');
+  const g=document.createElement("div");g.className="opts";
+  pick(it.en,en).forEach((o,i)=>{const b=document.createElement("button");b.className="opt";b.dataset.val=o;b.innerHTML='<span class="k">'+(i+1)+'</span>'+esc(o);
+    b.onclick=()=>{if(!BZ||BZ.over||BZ.lock)return;BZ.lock=true;const ok=o===it.en;
+      g.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.dataset.val===it.en)x.classList.add("ok");});
+      if(ok){BZ.score++;BZ.streak++;sfx.ok(Math.min(BZ.streak,8));floaty("+1",b);if(BZ.streak%5===0){BZ.end+=3000;floaty("+3s ⏱️",$("bzCard"),"var(--sky)");}}
+      else{b.classList.add("no");BZ.streak=0;BZ.end-=3000;sfx.no();floaty("-3s",b,"var(--tomato)");}
+      $("bzScore").textContent=BZ.score;$("bzCombo").textContent=BZ.streak>=2?"🔥 x"+BZ.streak+" (cada 5 seguidas: +3 segundos)":"";
+      setTimeout(()=>{if(BZ&&!BZ.over){BZ.lock=false;bzNext();}},ok?350:800);};
+    g.appendChild(b);});
+  const a=$("bzAns");a.innerHTML="";a.appendChild(g);
+}
+function endBlitz(){
+  if(!BZ||BZ.over)return;BZ.over=true;clearInterval(BZ.timer);
+  const s=BZ.score,rec=s>prog.blitzBest;if(rec)prog.blitzBest=s;const coins=s+(rec&&s>0?10:0);addCoins(coins);addXp(s*3);if(s>0)bumpStreak();save();
+  BZ=null;
+  $("resBox").innerHTML='<div style="font-size:4rem;line-height:1">⚡</div><h2>¡Tiempo!</h2><p style="font-size:1.4rem;font-weight:800;margin:0">'+s+' respuestas correctas</p>'+
+   (rec&&s>0?'<p style="font-weight:800;color:var(--sun-deep);margin:0">🏅 ¡Nuevo récord!</p>':'<p style="margin:0;font-weight:700">Tu récord: '+prog.blitzBest+'</p>')+
+   '<div class="rewards"><span class="pill">🪙 +'+coins+'</span><span class="pill">✨ +'+s*3+' XP</span></div>'+
+   '<div class="row"><button class="btn tomato" id="bzAgain">⚡ Otra vez</button><button class="btn ghost" id="bzHome">Volver al mapa</button></div>';
+  $("bzAgain").onclick=startBlitz;$("bzHome").onclick=goHome;
+  sfx.win();if(rec&&s>0)confetti();show("result");
+}
+$("blitzBtn").onclick=startBlitz;
+
+/* =================== MEMOTEST =================== */
+let MM=null;
+function startMemo(){
+  const cand=MODS.filter(m=>m.items&&m.items.filter(it=>it.v||it.c||it.num).length>=6&&m.id!=="clock");
+  const m=rnd(cand);const its=shuffle(m.items.filter(it=>it.v||it.c||it.num)).slice(0,6);
+  MM={m,open:[],got:0,moves:0,lock:false};
+  $("memoSub").textContent="Tema: "+m.name+" — uní cada imagen con su palabra en inglés.";$("memoMoves").textContent=0;
+  const cards=shuffle(its.flatMap((it,i)=>[{i,vis:true,html:visHTML(it),it},{i,vis:false,html:esc(it.en),it}]));
+  const g=$("memoGrid");g.innerHTML="";
+  cards.forEach(cd=>{const b=document.createElement("button");b.className="mc";b.setAttribute("aria-label","Carta");
+    b.innerHTML='<div class="in"><div class="f">?</div><div class="b'+(cd.vis?" vis":"")+'">'+cd.html+'</div></div>';
+    b.onclick=()=>memoFlip(b,cd);g.appendChild(b);});
+  show("memo");
+}
+function memoFlip(b,cd){
+  if(MM.lock||b.classList.contains("flip")||b.classList.contains("got"))return;
+  b.classList.add("flip");sfx.flip();if(!cd.vis)speak(cd.it.en);
+  MM.open.push([b,cd]);
+  if(MM.open.length<2)return;
+  MM.moves++;$("memoMoves").textContent=MM.moves;
+  const [[b1,c1],[b2,c2]]=MM.open;MM.open=[];
+  if(c1.i===c2.i&&c1.vis!==c2.vis){setTimeout(()=>{b1.classList.add("got");b2.classList.add("got");sfx.pair();speak(c1.it.en);floaty("+1 🪙",b2);},300);MM.got++;
+    if(MM.got===6)setTimeout(endMemo,900);}
+  else{MM.lock=true;setTimeout(()=>{b1.classList.remove("flip");b2.classList.remove("flip");MM.lock=false;},950);}
+}
+function endMemo(){
+  const mv=MM.moves,rec=!prog.memoBest||mv<prog.memoBest;if(rec)prog.memoBest=mv;
+  const coins=6+(mv<=9?10:mv<=12?5:0)+(rec?5:0);addCoins(coins);addXp(30);bumpStreak();save();
+  $("resBox").innerHTML='<div style="font-size:4rem;line-height:1">🧠</div><h2>¡Memoria de elefante!</h2><p style="font-size:1.3rem;font-weight:800;margin:0">Lo hiciste en '+mv+' jugadas</p>'+
+   (rec?'<p style="font-weight:800;color:var(--sun-deep);margin:0">🏅 ¡Nuevo récord!</p>':'<p style="margin:0;font-weight:700">Tu récord: '+prog.memoBest+' jugadas</p>')+
+   '<div class="rewards"><span class="pill">🪙 +'+coins+'</span><span class="pill">✨ +30 XP</span></div>'+
+   '<div class="row"><button class="btn grape" id="mmAgain">🧠 Otra vez</button><button class="btn ghost" id="mmHome">Volver al mapa</button></div>';
+  $("mmAgain").onclick=startMemo;$("mmHome").onclick=goHome;sfx.win();confetti();show("result");
+}
+$("memoBtn").onclick=startMemo;
+
+/* =================== TIENDA =================== */
+function openShop(){
+  $("nameIn").value=prog.name||"";
+  const g=$("shopGrid");g.innerHTML="";
+  AVATARS.forEach(([e,price])=>{const own=prog.owned.includes(e),on=prog.avatar===e,b=document.createElement("button");
+    b.className="av"+(on?" on":"")+(!own&&prog.coins<price?" cant":"");
+    b.innerHTML='<span class="e">'+e+'</span><span>'+(on?"✔ Usando":own?"Elegir":"🪙 "+price)+'</span>';
+    b.onclick=()=>{if(own){prog.avatar=e;save();sfx.pair();openShop();return;}
+      if(prog.coins<price){toast("Te faltan "+(price-prog.coins)+" monedas. ¡Seguí jugando!");sfx.no();return;}
+      prog.coins-=price;prog.owned.push(e);prog.avatar=e;save();sfx.coin();setTimeout(sfx.win,100);confetti();toast("¡Nuevo personaje: "+e+"!");openShop();};
+    g.appendChild(b);});
+  show("shop");
+}
+$("nameSave").onclick=()=>{prog.name=$("nameIn").value.trim().slice(0,24);save();toast(prog.name?"¡Hola, "+prog.name+"! 👋":"Nombre borrado");};
+$("nameIn").addEventListener("keydown",e=>{if(e.key==="Enter")$("nameSave").click();});
+
+/* =================== ÁLBUM =================== */
+function openAlbum(){
+  const got=doneCount(),gold=MODS.filter(m=>topicStars(m.id)===3).length;
+  $("albumSub").textContent=got+" de "+MODS.length+" figuritas · "+gold+" doradas ✨ · "+WORLDS.filter(w=>w.mods.every(m=>topicStars(m.id)>0)).length+" medallas 🏅";
+  const body=$("albumBody");body.innerHTML="";
+  WORLDS.forEach(w=>{const h=document.createElement("div");h.className="whead";h.style.setProperty("--c","var(--"+w.color+")");h.style.setProperty("--d","var(--"+w.color+"-deep)");
+    h.innerHTML='<div class="wi">'+w.ic+'</div><div><h2>'+w.name+' <span class="lvtag">'+w.lvl+'</span>'+(w.mods.every(m=>topicStars(m.id)>0)?' 🏅':'')+'</h2></div>';body.appendChild(h);
+    const g=document.createElement("div");g.className="album";
+    w.mods.forEach(m=>{const s=topicStars(m.id),b=document.createElement("button");b.className="stk"+(s?"":" lock")+(s===3?" gold":"");
+      b.innerHTML='<span class="e">'+m.ic+'</span><small>'+(s?esc(m.name):"???")+'</small><span class="stars" style="font-size:.85rem">'+starsHtml(s,3)+'</span>';
+      b.onclick=()=>openLearn(m);g.appendChild(b);});
+    body.appendChild(g);});
+  show("album");
+}
+
+/* =================== VICTORIA =================== */
+function openWin(){
+  $("winName").textContent=(prog.avatar+" "+(prog.name||"Explorador/a")).trim();
+  $("winText").textContent="completó los "+MODS.length+" módulos de Aventura English y ganó "+totalStars()+" estrellas. Congratulations!";
+  $("winDate").textContent=new Date().toLocaleDateString("es-AR",{day:"numeric",month:"long",year:"numeric"});
+  show("win");confetti();sfx.lvl();speak("Congratulations! You are an English champion!");
+}
+$("winPrint").onclick=()=>window.print();
+$("winHome").onclick=goHome;
+
+/* =================== CONFETTI =================== */
 function confetti(){
   if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const cv=$("confetti"),ctx=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;
@@ -573,9 +1295,9 @@ function confetti(){
     if(++f<200)requestAnimationFrame(step);else ctx.clearRect(0,0,cv.width,cv.height);})();
 }
 
+window.__AE={MODS,genQuestions,prog:()=>prog,G:()=>G};
 goHome();
 })();
 </script>
-
 </body>
 </html>
